@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #07090b;
+  --frame: #0d1116;
+  --surface-1: #151b21;
+  --surface-2: #1b242b;
+  --surface-3: #202c33;
+  --surface-4: #2a363d;
+  --text: #dceaf7;
+  --muted: #91a4af;
+  --accent-green: #5cff95;
+  --accent-cyan: #43d8ff;
+  --accent-amber: #ffbf47;
+  --accent-red: #ff5a70;
+  --accent-blue: #6da7ff;
+  --line: #303b42;
+  --line-bright: #495760;
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+}
+
+button,
+a {
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+}
