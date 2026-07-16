@@ -1,31 +1,41 @@
 # 808bytes Web App
 
-FL Studio-inspired storefront prototype built with Next.js App Router.
+Next.js App Router storefront with a playable hardware-inspired workstation hero and a modern product catalog.
 
-## Local Run
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open [http://localhost:3000](http://localhost:3000). If that port is occupied, use the alternate URL printed by Next.js.
 
-## Implemented Now
+## Implemented
 
-- Track-lane homepage wireframe in [app/page.tsx](app/page.tsx)
-- Clickable product detail pages in [app/products/[slug]/page.tsx](app/products/%5Bslug%5D/page.tsx)
-- Starter typed catalog data in [lib/store-data.ts](lib/store-data.ts)
-- FL-style theme tokens and responsive behavior in [app/globals.css](app/globals.css)
+- Interactive workstation and storefront in [app/page.tsx](app/page.tsx)
+- Independent rhythm and melody Web Audio sequencers
+- Kick, Clap, Hats, and Perc pattern banks
+- Product type filters and preview selection
+- Product detail pages in [app/products/[slug]/page.tsx](app/products/%5Bslug%5D/page.tsx)
+- Scrollable About experience in [app/about/page.tsx](app/about/page.tsx)
+- Typed starter catalog in [lib/store-data.ts](lib/store-data.ts)
 
 ## Scripts
 
-- `npm run dev` Start local dev server
-- `npm run lint` Run lint checks
-- `npm run build` Create production build
+- `npm run dev`: start the local development server
+- `npm run lint`: run ESLint
+- `npm run build`: create and type-check a production build
 
-## Next Build Steps
+## Audio Notes
 
-1. Replace placeholder cover blocks with real product artwork.
-2. Connect Stripe checkout and free-download delivery links.
-3. Add CMS-backed content editing for categories and products.
+The workstation uses synthesized Web Audio voices and does not require audio assets. Browser autoplay rules require the first playback action to come from a click or key gesture. Beat and Melody use separate schedulers and can run independently.
+
+## Known Gaps
+
+- Tone, Drive, Space, and Glue knobs are not wired to audio parameters
+- No master Stop/reset control yet
+- Product artwork and audio previews are placeholders
+- Cart, checkout, and download delivery are not implemented
+
+See [App Implementation Notes](../docs/APP_IMPLEMENTATION_NOTES.md) for the current behavior and [Implementation Roadmap](../docs/IMPLEMENTATION_ROADMAP.md) for planned work.

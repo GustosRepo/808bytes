@@ -1,48 +1,62 @@
 # Project Brief
 
 ## Product Name
+
 808bytes Store
 
 ## Vision
-A DAW-inspired ecommerce experience for producers, where the site feels native to music software culture but still behaves like a clear online store.
+
+Create a storefront for producers with a memorable playable first impression and a clear shopping experience. The interactive workstation carries the brand; the catalog below behaves like a modern ecommerce store.
 
 ## Audience
-- Beatmakers
-- Producers
+
+- Beatmakers and producers
 - Audio hobbyists
+- Plugin and sample-pack customers
 - Fans buying merch
 
 ## Primary Goals
-- Sell digital products quickly
-- Offer high-value freebies to grow audience
-- Keep browsing fast and fun
-- Make the brand feel native to producers, not like a generic storefront
-- Keep the buying/downloading path obvious even when using DAW visual language
 
-## Success Metrics
-- Product page click-through rate
-- Conversion rate (paid)
-- Free download conversion to email list
-- Average order value
-- About page engagement/scroll depth
+- Make the homepage immediately distinctive and enjoyable
+- Let visitors create a basic beat without learning a DAW
+- Sell and distribute digital products with minimal friction
+- Use freebies to grow the audience
+- Keep product discovery, pricing, and purchase actions obvious
 
-## Functional Scope (MVP)
-- DAW-inspired homepage with shop navigation, browser, playlist lanes, and product actions
-- Product clips with waveform/step visuals, price/free tag, and CTA
-- Product detail page or product actions panel
-- About page as scrollable `ABOUT_808BYTES.flp` session view
-- First-load guide modal explaining how to shop
-- Cart and checkout for paid items
-- Direct download flow for free items
-- Search and basic filters (Free/Paid, Newest/Popular)
+## Current Functional Scope
 
-## Non-Functional Scope
-- Mobile responsive
-- Fast initial load
-- Accessible color contrast and keyboard navigation
-- Readable at 100% browser zoom on common laptop widths
+- Hardware-inspired interactive hero workstation
+- 16-step sequencer with Kick, Clap, Hats, and Perc banks
+- Independently controlled mini-key melody loop
+- Product preview/selection within the workstation display
+- Scrollable transition into a filtered product catalog
+- Dedicated product detail routes
+- Scrollable, DAW-influenced About page
+- Responsive desktop and mobile layouts
 
-## Out of Scope (MVP)
-- User accounts
-- Advanced recommendation engine
+## MVP Scope Still To Build
+
+- Cart and checkout for paid products
+- Reliable free-download delivery flow
+- Final product artwork and media
+- Search and expanded catalog sorting if inventory requires them
+- Analytics for workstation engagement and commerce events
+
+## Non-Functional Requirements
+
+- Audio must remain balanced when rhythm and melody play together
+- Rhythm and melody transports must work independently
+- Timing should be stable enough to feel musical
+- Audio must begin only after a user gesture and stop cleanly
+- Controls need visible labels, focus states, and keyboard support
+- The store must remain readable at 100% browser zoom
+- Mobile layouts must not overlap or require horizontal page scrolling
+- Initial load should remain fast
+
+## Out of Scope For MVP
+
+- Full DAW editing or recording
+- Saving/exporting workstation patterns
+- User accounts and download history
+- Advanced recommendations
 - Multi-vendor marketplace features

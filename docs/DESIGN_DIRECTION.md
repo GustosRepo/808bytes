@@ -1,89 +1,68 @@
 # Design Direction
 
 ## Creative Direction
-DAW-inspired storefront for audio products.
 
-The site should use FL Studio and DAW visual language as the brand layer, while the interaction model stays recognizably ecommerce. Users should never need to understand a fake DAW to shop. Store browsing happens through explicit shop navigation, catalog filters, product clips, product action panels, and bright buy/download cues.
+The experience combines an OP-1-inspired hardware attitude with a clean ecommerce system. The workstation should feel tactile, compact, playful, and intentional. The store below should feel calm, polished, and easy to scan.
 
-## Visual Principles
-- Dark technical base
-- Bright accent channels by category
-- Structured lane system with clear hierarchy
-- High readability over decoration
-- Dense but readable software chrome
-- Abstract musical visuals: waveforms, grid lines, step sequencers, meters, plugin panels
-- Shopping-first clarity: navigation, filters, product actions, and CTAs must be obvious
+This is not a simulated DAW. Musical interaction is concentrated in the hero; shopping uses familiar navigation, filters, product cards, prices, and calls to action.
 
-## Color Tokens (Initial)
-- Background base: #080808
-- Frame: #101113
-- Surface 1: #171819
-- Surface 2: #202124
-- Surface 3: #28292C
-- Text primary: #E4DFD4
-- Text muted: #9B978E
-- Accent green: #8FA66A
-- Accent cyan: #8CA7AD
-- Accent amber: #C19A5B
-- Accent red: #B86762
-- Accent blue: #8D98AA
-- Commerce action: #78F0A2
+## Homepage Composition
 
-Commerce actions are allowed to be brighter than the DAW chrome. Buy, download, cart, checkout, and guide cues should stand out clearly against the restrained graphite interface.
+1. Fixed, restrained brand navigation
+2. First-viewport workstation hero with concise supporting copy
+3. Full-width category/status strip
+4. Modern catalog header and filters
+5. Product grid with clear preview and purchase actions
 
-## Typography
-- Display/headings: condensed and industrial sans family
-- Body/UI text: clean sans optimized for legibility
-- Numeric labels/prices: monospaced or tabular numerals
+The first viewport should show the 808bytes name and workstation while leaving enough vertical context to encourage scrolling.
 
-## Motion Guidelines
-- Lane entry: short staggered reveal on initial load
-- Clip hover: subtle edge glow, no large layout shift
-- Timeline interaction: smooth contained horizontal scroll
-- Meters/waveforms: small ambient motion when added later
+## Workstation Principles
 
-## UI Components to Define
-- Shop Navigation Bar
-- Shop Browser Sidebar
-- Playlist Lane
-- Product Clip
-- Price/Free Insert Label
-- Product Actions Panel
-- Step Sequencer
-- Cart Drawer
-- First-load Guide Modal
+- Controls should resemble physical buttons, pads, keys, knobs, and a small display
+- Every prominent musical control should have a real response
+- The pad grid edits the currently selected rhythm bank
+- Kick, Clap, Hats, and Perc use distinct colors and sounds
+- Beat and Melody transports are separate
+- Active steps, selected notes, and playheads need clear visual feedback
+- Default patterns should produce a coherent beat immediately
+- Audio levels should favor clarity over loudness
 
-## Onboarding Direction
-Show a lightweight first-load modal inspired by FL Studio's project/welcome experience.
+## Store Principles
 
-Rules:
-- Show once per browser using local storage.
-- Keep it dismissible and short.
-- Include a `Guide` button to reopen it.
-- Explain the shopping flow in 3-4 steps.
-- Use callouts only for essential areas: shop nav, filters/categories, product clips, and product actions.
-- Do not make it a long multi-step wizard.
+- Familiar product grid, filters, prices, and CTA language
+- Strong hierarchy without oversized marketing sections
+- Product type and price/free status visible at a glance
+- Preview selection must not be confused with purchase/download
+- Keep commerce controls visually stronger than decorative workstation details
 
-## About Page Direction
-The About page should be a scrollable project/session view called `ABOUT_808BYTES.flp`, not a generic marketing page.
+## Visual Language
 
-Use a DAW hero at the top:
-- Full DAW chrome remains visible.
-- Center panel shows `ABOUT_808BYTES.flp`.
-- Abstract playlist grid, waveform, meters, or plugin windows can carry the mood.
-- Copy stays short and direct.
+- Warm off-white page background with black technical outlines
+- Neutral hardware surfaces with red, cyan, yellow, and blue accents
+- Compact industrial display typography for the workstation
+- Clean sans-serif body text for store readability
+- Square or lightly rounded controls; avoid soft card-heavy styling
+- Restrained shadows that make the workstation feel physical
+- Abstract waveform and step graphics are acceptable for placeholder product art
 
-The rest of the page scrolls like moving through an arrangement:
-- Track 1: Origin
-- Track 2: Sound philosophy
-- Track 3: Tools, packs, and VSTs
-- Track 4: Community and releases
+## Motion And Feedback
 
-Abstract visuals are allowed and encouraged as long as readability stays strong. Use waveform bars, glitch grids, floating plugin windows, file-browser rows, session notes, and meter lights instead of stock imagery or generic hero cards.
+- Pad/key press feedback should be immediate and subtle
+- Sequencer playheads should track audible events
+- Hover effects should not resize controls or shift layout
+- Avoid ambient animation that competes with the active workstation
+- Respect reduced-motion preferences as interaction polish is added
 
-## Accessibility Notes
-- Ensure contrast ratio targets are met
-- Never encode meaning with color alone
-- Keyboard focus states must be visible on all controls
-- Keep responsive density readable at 100% browser zoom; avoid requiring users to zoom out
-- Avoid fake controls that imply unavailable audio functionality
+## About Page
+
+The About route can retain its `ABOUT_808BYTES.flp` session concept as a secondary brand expression. It should stay scrollable, readable, and visually related to music production without dictating the homepage shopping model.
+
+## Accessibility
+
+- Preserve strong text/background contrast
+- Do not encode bank or playback state with color alone
+- Use descriptive accessible labels for pads, keys, and transports
+- Keep visible keyboard focus on all interactive controls
+- Prevent audio from autoplaying before user interaction
+- Provide an obvious way to stop every running loop
+- Ensure control labels fit at common mobile and desktop widths

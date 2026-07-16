@@ -1,57 +1,69 @@
 # Implementation Roadmap
 
-## Phase 1: Foundation
-- Initialize Next.js project
-- Set up design tokens and global styles
-- Build DAW-inspired shop shell and explicit shop navigation
-- Create static mock data for categories and products
+## Phase 1: Playable Brand Experience
+
+- Build the hardware-inspired workstation hero
+- Add independent rhythm and melody sequencing
+- Add Kick, Clap, Hats, and Perc voices
+- Add stable Web Audio scheduling and gain control
+- Connect featured products to the workstation display
 
 Definition of done:
-- Homepage renders shop browser, playlist-style product lanes, product actions, and static product clips
+- Visitors can create a coherent basic beat, run a melody separately, and stop either loop without audio clipping
 
-## Phase 2: Core Shopping UX
-- Implement contained horizontal playlist lane behavior
-- Build product actions panel and plugin-style product detail page
-- Add first-load guide modal and guide reopen button
-- Add cart drawer and cart page
-- Integrate checkout for paid items
+Status: implemented; browser and device QA remains
 
-Definition of done:
-- User can understand the shopping flow, browse, view details, and complete a test checkout flow
+## Phase 2: Storefront Foundation
 
-## Phase 3: About Session Page
-- Create `/about` as a scrollable `ABOUT_808BYTES.flp` project/session view
-- Build DAW hero with abstract waveform/grid/plugin-window visuals
-- Add arrangement-style sections for origin, sound philosophy, tools, and community
-- Keep copy compact and readable at normal zoom
+- Build a polished product grid below the workstation
+- Add type filters and explicit price/free labels
+- Add dedicated product detail routes
+- Keep preview and purchase actions distinct
 
 Definition of done:
-- About page feels like moving through a production session and matches the homepage DAW system
+- Users can browse the catalog, filter products, inspect an item, and reach its product route without learning the workstation
 
-## Phase 4: Free Download Flow
-- Add free product CTA logic
-- Add optional email capture before download
-- Add confirmation/download page
+Status: prototype implemented
 
-Definition of done:
-- User can claim free item reliably on desktop and mobile
+## Phase 3: Workstation Polish
 
-## Phase 5: Content Operations
-- Connect product data source (CMS or JSON pipeline)
-- Add category/product management process
-- Add image optimization pipeline
-- Add editable About content blocks if a CMS is introduced
+- Make Tone, Drive, Space, and Glue macros functional
+- Add master Stop and reset-pattern controls
+- Improve keyboard controls and focus behavior
+- Tune sounds across Safari, Chrome, Firefox, mobile, and common speakers
+- Consider optional production samples if synthesized drums are not strong enough
 
 Definition of done:
-- New products can be added without code changes
+- The workstation feels intentional, balanced, accessible, and reliable across target browsers
+
+## Phase 4: Commerce
+
+- Add cart state and cart UI
+- Integrate paid checkout
+- Add free-product delivery and optional email capture
+- Add success, failure, and download confirmation states
+
+Definition of done:
+- Paid and free products can be acquired end to end on desktop and mobile
+
+## Phase 5: Content And Media
+
+- Replace placeholder covers with final artwork
+- Add real audio previews
+- Choose a CMS or maintainable product-data workflow
+- Add image/audio optimization and publishing validation
+
+Definition of done:
+- Products can be published with final media and without editing page components
 
 ## Phase 6: Launch Hardening
-- Accessibility pass
-- SEO basics (metadata, social cards, sitemap)
-- Analytics events
-- Performance optimization
-- Responsive QA at 100% browser zoom on laptop, tablet, and mobile widths
-- User-confusion QA: verify fake DAW visuals do not obscure commerce actions
+
+- Accessibility and reduced-motion pass
+- Responsive and overlap QA
+- SEO metadata, social cards, sitemap, and robots rules
+- Analytics for workstation and commerce funnels
+- Performance and Web Audio lifecycle checks
+- Legal, support, refund, and privacy content
 
 Definition of done:
-- Site is stable, trackable, and launch-ready
+- The experience is stable, measurable, legally complete, and ready for production traffic

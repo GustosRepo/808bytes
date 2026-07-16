@@ -1,50 +1,47 @@
 # 808bytes Store
 
-FL Studio-inspired ecommerce site concept for digital audio products and merch.
+An interactive music workstation and modern storefront for plugins, sample packs, one-shots, and merch.
 
-## Project Goal
-Build a simple, high-style storefront where each category behaves like a DAW track lane with a horizontal product carousel.
+## Product Direction
 
-## Documentation Index
-- docs/PROJECT_BRIEF.md
-- docs/SITE_ARCHITECTURE.md
-- docs/DESIGN_DIRECTION.md
-- docs/CONTENT_MODEL.md
-- docs/IMPLEMENTATION_ROADMAP.md
-- docs/LAUNCH_CHECKLIST.md
+The homepage opens with a compact hardware-inspired workstation that visitors can actually play. It establishes the 808bytes sound and personality without turning shopping into a fake DAW workflow. Scrolling reveals a conventional, polished product catalog with clear filters, prices, previews, and purchase actions.
+
+## Current Experience
+
+- Playable 16-step rhythm sequencer
+- Separate Kick, Clap, Hats, and Perc pattern banks
+- Independent mini-key melody loop
+- Web Audio synthesis with separate drum/key buses and master compression
+- Product selection integrated into the workstation display
+- Responsive catalog with product-type filters
+- Dedicated product and About routes
+
+## Documentation
+
+- [Project brief](docs/PROJECT_BRIEF.md)
+- [Site architecture](docs/SITE_ARCHITECTURE.md)
+- [Design direction](docs/DESIGN_DIRECTION.md)
+- [Content model](docs/CONTENT_MODEL.md)
+- [Implementation notes](docs/APP_IMPLEMENTATION_NOTES.md)
+- [Implementation roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+- [Launch checklist](docs/LAUNCH_CHECKLIST.md)
 
 ## App Source
-- web/ (Next.js implementation)
 
-## Run The App
+The Next.js application lives in `web/`.
+
 ```bash
 cd web
 npm install
 npm run dev
 ```
 
-## Core Experience
-- Track-based homepage layout
-- Horizontal carousels per category
-- Fast product preview and direct buy/download actions
-- Clear free vs paid product labeling
+Open [http://localhost:3000](http://localhost:3000). Next.js will use another port if 3000 is occupied.
 
-## Initial Categories
-- Free VSTs
-- Drum Packs
-- One Shots
-- Merch
-- Featured
+## Build Priorities
 
-## Suggested Stack
-- Next.js
-- Tailwind CSS with custom theme variables
-- Stripe Checkout (paid products)
-- File delivery links for free and paid digital assets
-
-## Build Priority
-1. Homepage track UI with static data
-2. Product detail panel/page
-3. Cart and checkout flow
-4. Content admin workflow
-5. Analytics and post-launch optimization
+1. Refine and test the playable workstation
+2. Replace placeholder product artwork with final assets
+3. Implement checkout and free-download delivery
+4. Add analytics and content operations
+5. Complete accessibility, responsive, and launch QA
