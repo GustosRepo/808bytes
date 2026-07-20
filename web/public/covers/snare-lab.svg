@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Snare Lab 808 cover art</title>
+  <desc id="desc">Snare pack cover with transient blocks and rim accents.</desc>
+  <rect width="900" height="720" fill="#151315"/>
+  <rect x="54" y="54" width="792" height="612" fill="#211b20" stroke="#b86762" stroke-width="6"/>
+  <path d="M116 470h668" stroke="#47383a" stroke-width="12"/>
+  <path d="M144 470V214M214 470V326M284 470V150M354 470V374M424 470V246M494 470V178M564 470V352M634 470V284M704 470V210" stroke="#f05d5e" stroke-width="24"/>
+  <rect x="104" y="104" width="280" height="58" fill="#f05d5e"/>
+  <text x="122" y="144" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#111315">80 SNARES</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="74" font-weight="800" fill="#eee8dc">SNARE LAB 808</text>
+</svg>

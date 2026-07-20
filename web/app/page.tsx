@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ProductCover from "@/components/product-cover";
 import { categories, getFeaturedProducts, products, type Product } from "@/lib/store-data";
+import { readCartItems, upsertCartItem, writeCartItems, type CartItem } from "@/lib/cart-client";
 
 const typeLabel: Record<Product["type"], string> = {
   vst: "Plugin",
@@ -10,6 +13,8 @@ const typeLabel: Record<Product["type"], string> = {
   oneshot: "One-shot",
   merch: "Merch",
 };
+
+const storeFilters = ["all", "vst", "pack", "oneshot", "merch"] as const;
 
 const banks = [
   { id: "kick", label: "Kick", color: "#f05d5e" },
@@ -28,8 +33,13 @@ const defaultPatterns: Patterns = {
   perc: [7, 15],
 };
 
-const knobLabels = ["Tone", "Drive", "Space", "Glue"];
-const transportLabels = ["Hit", "Drums", "Melody", "Save"];
+const macroDefinitions = [
+  { id: "tone", label: "Tone" },
+  { id: "drive", label: "Drive" },
+  { id: "space", label: "Space" },
+  { id: "glue", label: "Glue" },
+] as const;
+const transportLabels = ["Hit", "Drums", "Melody", "Stop"];
 const whiteKeys = ["C", "D", "E", "F", "G", "A", "B", "C2", "D2", "E2", "F2", "G2"];
 const blackKeys = [
   { note: "C#", left: "7.2%" },
@@ -71,12 +81,82 @@ type AudioEngine = {
   context: AudioContext;
   drumBus: GainNode;
   keyBus: GainNode;
+  toneFilter: BiquadFilterNode;
+  driveInput: GainNode;
+  driveShaper: WaveShaperNode;
+  spaceSend: GainNode;
+  spaceReturn: GainNode;
+  glueCompressor: DynamicsCompressorNode;
   noiseBuffer: AudioBuffer;
+};
+
+type MacroId = (typeof macroDefinitions)[number]["id"];
+type MacroValues = Record<MacroId, number>;
+
+const defaultMacroValues: MacroValues = {
+  tone: 0.55,
+  drive: 0.3,
+  space: 0.24,
+  glue: 0.42,
+};
+
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+const createDriveCurve = (amount: number, samples = 2048) => {
+  const curve = new Float32Array(samples);
+  const shapedAmount = Math.max(1, amount * 320);
+
+  for (let index = 0; index < samples; index += 1) {
+    const x = (index * 2) / samples - 1;
+    curve[index] = ((3 + shapedAmount) * x * 20 * (Math.PI / 180)) / (Math.PI + shapedAmount * Math.abs(x));
+  }
+
+  return curve;
+};
+
+const createImpulseResponse = (context: AudioContext, duration = 1.5, decay = 2.2) => {
+  const sampleCount = Math.floor(context.sampleRate * duration);
+  const impulse = context.createBuffer(2, sampleCount, context.sampleRate);
+
+  for (let channel = 0; channel < impulse.numberOfChannels; channel += 1) {
+    const data = impulse.getChannelData(channel);
+    for (let index = 0; index < sampleCount; index += 1) {
+      const t = index / sampleCount;
+      const envelope = Math.pow(1 - t, decay);
+      data[index] = (Math.random() * 2 - 1) * envelope;
+    }
+  }
+
+  return impulse;
+};
+
+const applyMacroSettings = (engine: AudioEngine, macros: MacroValues, smoothAt?: number) => {
+  const { context, toneFilter, driveInput, driveShaper, spaceSend, spaceReturn, glueCompressor } = engine;
+  const now = smoothAt ?? context.currentTime;
+
+  const toneFrequency = 650 + macros.tone * 6500;
+  toneFilter.frequency.setTargetAtTime(toneFrequency, now, 0.018);
+  toneFilter.Q.setTargetAtTime(0.7 + macros.tone * 3.4, now, 0.03);
+
+  const driveAmount = macros.drive;
+  driveInput.gain.setTargetAtTime(1 + driveAmount * 2.8, now, 0.02);
+  driveShaper.curve = createDriveCurve(driveAmount);
+
+  const spaceAmount = macros.space;
+  spaceSend.gain.setTargetAtTime(spaceAmount * 0.42, now, 0.04);
+  spaceReturn.gain.setTargetAtTime(0.2 + spaceAmount * 0.95, now, 0.04);
+
+  const glueAmount = macros.glue;
+  glueCompressor.threshold.setTargetAtTime(-14 - glueAmount * 18, now, 0.03);
+  glueCompressor.ratio.setTargetAtTime(2.2 + glueAmount * 6.2, now, 0.03);
+  glueCompressor.attack.setTargetAtTime(0.02 - glueAmount * 0.017, now, 0.03);
+  glueCompressor.release.setTargetAtTime(0.1 + glueAmount * 0.22, now, 0.03);
 };
 
 const formatPrice = (product: Product) => (product.isFree ? "Free" : `$${product.price}`);
 
 export default function Home() {
+  const router = useRouter();
   const featuredProducts = useMemo(() => getFeaturedProducts(), []);
   const [activeBank, setActiveBank] = useState<BankId>("kick");
   const [selectedProduct, setSelectedProduct] = useState<Product>(featuredProducts[0] ?? products[0]);
@@ -85,9 +165,13 @@ export default function Home() {
   const [storeFilter, setStoreFilter] = useState<Product["type"] | "all">("all");
   const [isDrumPlaying, setIsDrumPlaying] = useState(false);
   const [isKeyPlaying, setIsKeyPlaying] = useState(false);
+  const [macroValues, setMacroValues] = useState<MacroValues>(defaultMacroValues);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
   const audioEngineRef = useRef<AudioEngine | null>(null);
+  const macroValuesRef = useRef<MacroValues>(defaultMacroValues);
   const patternsRef = useRef<Patterns>(defaultPatterns);
   const drumTimerRef = useRef<number | null>(null);
   const keyTimerRef = useRef<number | null>(null);
@@ -107,6 +191,34 @@ export default function Home() {
   );
 
   const selectedCategory = categories.find((category) => category.id === selectedProduct.categoryId);
+  const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setCartItems(readCartItems());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  const addToCart = (productId: string, options?: { checkout?: boolean }) => {
+    const product = products.find((candidate) => candidate.id === productId);
+    if (!product?.isPurchasable) {
+      setCartMessage(product?.statusLabel ?? "Preview only. Checkout is not available yet.");
+      return;
+    }
+
+    const nextItems = upsertCartItem(readCartItems(), productId, 1);
+    writeCartItems(nextItems);
+    setCartItems(nextItems);
+    setCartMessage(options?.checkout ? "Added. Opening checkout." : "Added to cart.");
+
+    if (options?.checkout) {
+      router.push("/checkout");
+    }
+  };
 
   const toggleStep = (step: number) => {
     setPatterns((currentPatterns) => {
@@ -121,6 +233,34 @@ export default function Home() {
     });
   };
 
+  const resetActivePattern = useCallback(() => {
+    setPatterns((currentPatterns) => {
+      const nextPatterns = { ...currentPatterns, [activeBank]: [...defaultPatterns[activeBank]] };
+      patternsRef.current = nextPatterns;
+      return nextPatterns;
+    });
+  }, [activeBank]);
+
+  const stopAndResetWorkstation = useCallback(() => {
+    setIsDrumPlaying(false);
+    setIsKeyPlaying(false);
+    setCurrentStep(0);
+    setCurrentKeyIndex(0);
+
+    setPatterns(() => {
+      const nextPatterns = {
+        kick: [...defaultPatterns.kick],
+        clap: [...defaultPatterns.clap],
+        hats: [...defaultPatterns.hats],
+        perc: [...defaultPatterns.perc],
+      };
+      patternsRef.current = nextPatterns;
+      return nextPatterns;
+    });
+
+    setActiveKeys(["C", "E", "G", "B"]);
+  }, []);
+
   const getAudioEngine = useCallback(() => {
     if (typeof window === "undefined") {
       return null;
@@ -128,8 +268,16 @@ export default function Home() {
 
     if (!audioEngineRef.current) {
       const context = new AudioContext();
+      const inputBus = context.createGain();
+      const toneFilter = context.createBiquadFilter();
+      const driveInput = context.createGain();
+      const driveShaper = context.createWaveShaper();
+      const driveOutput = context.createGain();
+      const spaceSend = context.createGain();
+      const convolver = context.createConvolver();
+      const spaceReturn = context.createGain();
+      const glueCompressor = context.createDynamicsCompressor();
       const master = context.createGain();
-      const compressor = context.createDynamicsCompressor();
       const drumBus = context.createGain();
       const keyBus = context.createGain();
       const noiseBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
@@ -141,23 +289,68 @@ export default function Home() {
 
       drumBus.gain.value = 0.72;
       keyBus.gain.value = 0.34;
-      master.gain.value = 0.72;
-      compressor.threshold.value = -18;
-      compressor.knee.value = 14;
-      compressor.ratio.value = 5;
-      compressor.attack.value = 0.003;
-      compressor.release.value = 0.18;
+      inputBus.gain.value = 1;
+      toneFilter.type = "lowpass";
+      driveInput.gain.value = 1;
+      driveShaper.oversample = "4x";
+      driveOutput.gain.value = 0.7;
+      convolver.buffer = createImpulseResponse(context);
+      spaceSend.gain.value = 0;
+      spaceReturn.gain.value = 0;
+      glueCompressor.knee.value = 14;
+      master.gain.value = 0.78;
 
-      drumBus.connect(master);
-      keyBus.connect(master);
-      master.connect(compressor);
-      compressor.connect(context.destination);
+      drumBus.connect(inputBus);
+      keyBus.connect(inputBus);
+      inputBus.connect(toneFilter);
+      toneFilter.connect(driveInput);
+      driveInput.connect(driveShaper);
+      driveShaper.connect(driveOutput);
+      driveOutput.connect(glueCompressor);
+      toneFilter.connect(spaceSend);
+      spaceSend.connect(convolver);
+      convolver.connect(spaceReturn);
+      spaceReturn.connect(glueCompressor);
+      glueCompressor.connect(master);
+      master.connect(context.destination);
 
-      audioEngineRef.current = { context, drumBus, keyBus, noiseBuffer };
+      const engine = {
+        context,
+        drumBus,
+        keyBus,
+        toneFilter,
+        driveInput,
+        driveShaper,
+        spaceSend,
+        spaceReturn,
+        glueCompressor,
+        noiseBuffer,
+      };
+
+      applyMacroSettings(engine, macroValuesRef.current, context.currentTime);
+
+      audioEngineRef.current = engine;
     }
 
     return audioEngineRef.current;
   }, []);
+
+  useEffect(() => {
+    macroValuesRef.current = macroValues;
+
+    if (audioEngineRef.current) {
+      applyMacroSettings(audioEngineRef.current, macroValues, audioEngineRef.current.context.currentTime);
+    }
+  }, [macroValues]);
+
+  const updateMacro = (id: MacroId, nextValue: number) => {
+    setMacroValues((currentValues) => {
+      const value = clamp01(nextValue);
+      const nextValues = { ...currentValues, [id]: value };
+      macroValuesRef.current = nextValues;
+      return nextValues;
+    });
+  };
 
   const playNote = useCallback(
     (note: string, duration = 0.3, scheduledAt?: number) => {
@@ -309,7 +502,7 @@ export default function Home() {
     playNote(note);
   };
 
-  const toggleDrumPlayback = () => {
+  const toggleDrumPlayback = useCallback(() => {
     const engine = getAudioEngine();
 
     if (!engine) {
@@ -321,9 +514,9 @@ export default function Home() {
     }
 
     setIsDrumPlaying((currentValue) => !currentValue);
-  };
+  }, [getAudioEngine]);
 
-  const toggleKeyPlayback = () => {
+  const toggleKeyPlayback = useCallback(() => {
     const engine = getAudioEngine();
 
     if (!engine || activeMelodyNotes.length === 0) {
@@ -335,7 +528,61 @@ export default function Home() {
     }
 
     setIsKeyPlaying((currentValue) => !currentValue);
-  };
+  }, [activeMelodyNotes.length, getAudioEngine]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName;
+      if (target?.isContentEditable || tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT") {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === " ") {
+        event.preventDefault();
+        toggleDrumPlayback();
+        return;
+      }
+
+      if (key === "m") {
+        event.preventDefault();
+        toggleKeyPlayback();
+        return;
+      }
+
+      if (key === "x") {
+        event.preventDefault();
+        stopAndResetWorkstation();
+        return;
+      }
+
+      if (key === "r") {
+        event.preventDefault();
+        resetActivePattern();
+        return;
+      }
+
+      if (key >= "1" && key <= "4") {
+        event.preventDefault();
+        const nextBank = banks[Number(key) - 1];
+        if (nextBank) {
+          setActiveBank(nextBank.id);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [resetActivePattern, stopAndResetWorkstation, toggleDrumPlayback, toggleKeyPlayback]);
 
   useEffect(() => {
     if (!isDrumPlaying) {
@@ -551,7 +798,7 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-2">
                       {banks.map((bank) => (
                         <button
-                          className="h-14 border border-[#151515] text-xs font-bold uppercase text-[#151515] transition hover:translate-y-[-1px]"
+                          className="h-14 border border-[#151515] text-xs font-bold uppercase text-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
                           key={bank.id}
                           onClick={() => setActiveBank(bank.id)}
                           style={{
@@ -565,21 +812,36 @@ export default function Home() {
                       ))}
                     </div>
                     <div className="mt-2 grid grid-cols-4 gap-2">
-                      {knobLabels.map((label, index) => (
-                        <div className="text-center" key={label}>
+                      {macroDefinitions.map((macro) => {
+                        const value = macroValues[macro.id];
+
+                        return (
+                        <div className="text-center" key={macro.id}>
                           <button
-                            aria-label={`${label} macro`}
-                            className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#151515] bg-[#eee7d8] shadow-[inset_3px_4px_0_rgba(255,255,255,0.55)]"
+                            aria-label={`${macro.label} macro`}
+                            className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#151515] bg-[#eee7d8] shadow-[inset_3px_4px_0_rgba(255,255,255,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
+                            onClick={() => updateMacro(macro.id, value + 0.08)}
+                            onContextMenu={(event) => {
+                              event.preventDefault();
+                              updateMacro(macro.id, value - 0.08);
+                            }}
+                            onWheel={(event) => {
+                              event.preventDefault();
+                              updateMacro(macro.id, value + (event.deltaY > 0 ? -0.03 : 0.03));
+                            }}
+                            title="Click to increase, right-click to decrease, scroll to fine tune"
                             type="button"
                           >
                             <span
                               className="block h-5 w-[3px] origin-bottom bg-[#151515]"
-                              style={{ transform: `rotate(${-44 + index * 26 + activeStepCount}deg)` }}
+                              style={{ transform: `rotate(${-128 + value * 256}deg)` }}
                             />
                           </button>
-                          <p className="mt-1 text-[0.62rem] font-bold uppercase text-[#5d5a52]">{label}</p>
+                          <p className="mt-1 text-[0.62rem] font-bold uppercase text-[#5d5a52]">{macro.label}</p>
+                          <p className="text-[0.58rem] font-bold uppercase text-[#7b766a]">{Math.round(value * 100)}%</p>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </section>
                 </div>
@@ -587,8 +849,17 @@ export default function Home() {
                 <section className="grid gap-3 md:grid-cols-[1fr_220px]">
                   <div className="border border-[#151515] bg-[#beb5a4] p-3">
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase text-[#55524b]">Step pads</p>
-                      <p className="text-xs font-bold uppercase text-[#55524b]">{activeStepCount}/16 active</p>
+                      <p className="text-xs font-bold uppercase text-[#55524b]">Step pads (1-4 banks, Space drums, M melody, R reset, X stop)</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold uppercase text-[#55524b]">{activeStepCount}/16 active</p>
+                        <button
+                          className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
+                          onClick={resetActivePattern}
+                          type="button"
+                        >
+                          Reset bank
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-8 gap-2 sm:grid-cols-16">
                       {Array.from({ length: 16 }).map((_, index) => {
@@ -597,7 +868,7 @@ export default function Home() {
                         return (
                           <button
                             aria-label={`Toggle step ${index + 1}`}
-                            className="aspect-square min-h-10 border border-[#151515] transition hover:translate-y-[-1px]"
+                            className="aspect-square min-h-10 border border-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                             key={`step-${index}`}
                             onClick={() => {
                               toggleStep(index);
@@ -617,7 +888,7 @@ export default function Home() {
                   <div className="grid grid-cols-4 gap-2 border border-[#151515] bg-[#beb5a4] p-3 md:grid-cols-2">
                     {transportLabels.map((label, index) => (
                       <button
-                        className="h-12 border border-[#151515] bg-[#eee7d8] text-xs font-bold uppercase text-[#151515] transition hover:bg-white"
+                        className="h-12 border border-[#151515] bg-[#eee7d8] text-xs font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                         key={label}
                         onClick={() => {
                           if (label === "Drums") {
@@ -627,6 +898,11 @@ export default function Home() {
 
                           if (label === "Melody") {
                             toggleKeyPlayback();
+                            return;
+                          }
+
+                          if (label === "Stop") {
+                            stopAndResetWorkstation();
                             return;
                           }
 
@@ -644,6 +920,8 @@ export default function Home() {
                             ? { backgroundColor: "#f05d5e" }
                             : label === "Melody" && isKeyPlaying
                               ? { backgroundColor: "#78dcca" }
+                              : label === "Stop"
+                                ? { backgroundColor: "#151515", color: "#fff9ea" }
                               : undefined
                         }
                         type="button"
@@ -658,7 +936,7 @@ export default function Home() {
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-xs font-bold uppercase text-[#55524b]">Mini keys</p>
                     <button
-                      className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white"
+                      className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                       onClick={toggleKeyPlayback}
                       type="button"
                     >
@@ -673,7 +951,7 @@ export default function Home() {
                         return (
                           <button
                             aria-label={`Toggle key ${note}`}
-                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-[0.62rem] font-bold uppercase transition hover:bg-white"
+                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-[0.62rem] font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                             key={note}
                             onClick={() => {
                               toggleKey(note);
@@ -700,7 +978,7 @@ export default function Home() {
                       return (
                         <button
                           aria-label={`Toggle key ${keyData.note}`}
-                          className="absolute top-1 z-10 h-16 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5"
+                          className="absolute top-1 z-10 h-16 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                           key={keyData.note}
                           onClick={() => {
                             toggleKey(keyData.note);
@@ -762,55 +1040,48 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              {(["all", "vst", "pack", "oneshot", "merch"] as const).map((filter) => (
-                <button
-                  className={`border px-4 py-2 text-sm font-bold uppercase transition ${
-                    storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
-                  }`}
-                  key={filter}
-                  onClick={() => setStoreFilter(filter)}
-                  type="button"
-                >
-                  {filter === "all" ? "All" : typeLabel[filter]}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <div className="flex flex-wrap items-center gap-2 lg:hidden">
+                {storeFilters.map((filter) => (
+                  <button
+                    className={`border px-4 py-2 text-sm font-bold uppercase transition ${
+                      storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
+                    }`}
+                    key={filter}
+                    onClick={() => setStoreFilter(filter)}
+                    type="button"
+                  >
+                    {filter === "all" ? "All" : typeLabel[filter]}
+                  </button>
+                ))}
+              </div>
+              <Link
+                aria-label={`Open checkout with ${cartCount} items`}
+                className="relative inline-flex h-10 w-10 items-center justify-center border border-[#151515] bg-white text-[#151515] transition hover:bg-[#f5f0e7]"
+                href="/checkout"
+              >
+                <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24">
+                  <circle cx="9" cy="20" r="1.4" />
+                  <circle cx="17" cy="20" r="1.4" />
+                  <path d="M3 4h2l2.3 10.2a1.2 1.2 0 0 0 1.18.95h8.68a1.2 1.2 0 0 0 1.17-.93L20 7H7.2" />
+                </svg>
+                <span className="absolute -right-1.5 -top-1.5 min-w-5 rounded-full bg-[#151515] px-1.5 py-0.5 text-center text-[0.62rem] font-bold leading-none text-white">
+                  {cartCount}
+                </span>
+              </Link>
             </div>
+            {cartMessage ? <p className="mt-3 text-xs font-bold uppercase tracking-[0.1em] text-[#b34b44] lg:text-right">{cartMessage}</p> : null}
           </div>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredProducts.map((product, index) => {
+          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+            <div className="grid auto-rows-max content-start items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredProducts.map((product) => {
                 const category = categories.find((item) => item.id === product.categoryId);
-                const accent = index % 4 === 0 ? "#78dcca" : index % 4 === 1 ? "#f05d5e" : index % 4 === 2 ? "#f4c95d" : "#8fa7ff";
 
                 return (
-                  <article className="group border border-[#d8d0c0] bg-white p-4 shadow-[0_12px_34px_rgba(21,21,21,0.06)] transition hover:-translate-y-1 hover:border-[#151515]" key={product.id}>
+                  <article className="group self-start border border-[#d8d0c0] bg-white p-4 shadow-[0_12px_34px_rgba(21,21,21,0.06)] transition hover:-translate-y-1 hover:border-[#151515]" key={product.id}>
                     <button className="block w-full text-left" onClick={() => setSelectedProduct(product)} type="button">
-                      <div className="relative aspect-[1.15] overflow-hidden border border-[#151515] bg-[#eee7d8]">
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(135deg, ${accent} 0 18%, transparent 18% 100%), repeating-linear-gradient(90deg, rgba(21,21,21,0.14) 0, rgba(21,21,21,0.14) 1px, transparent 1px, transparent 18px), #eee7d8`,
-                          }}
-                        />
-                        <div className="absolute inset-x-5 bottom-5 border border-[#151515] bg-[#151515] p-3 text-white">
-                          <p className="text-[0.65rem] font-bold uppercase text-[#aba79e]">{category?.name ?? "Catalog"}</p>
-                          <div className="mt-3 flex h-10 items-end gap-1">
-                            {Array.from({ length: 18 }).map((_, barIndex) => (
-                              <span
-                                aria-hidden="true"
-                                className="w-full"
-                                key={`${product.id}-bar-${barIndex}`}
-                                style={{
-                                  height: 8 + ((barIndex * 9 + product.title.length) % 32),
-                                  backgroundColor: barIndex % 5 === 0 ? "#f4c95d" : accent,
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                      <ProductCover categoryName={category?.name ?? "Catalog"} className="aspect-[1.15]" product={product} />
                       <div className="mt-4 flex items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-bold uppercase text-[#8a8376]">{typeLabel[product.type]}</p>
@@ -821,9 +1092,14 @@ export default function Home() {
                       <p className="mt-3 min-h-12 text-sm leading-6 text-[#64645f]">{product.shortDescription}</p>
                     </button>
                     <div className="mt-4 grid grid-cols-2 gap-2">
-                      <Link className="bg-[#151515] px-3 py-2 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d]" href={`/products/${product.slug}`}>
-                        {product.isFree ? "Download" : "Buy now"}
-                      </Link>
+                      <button
+                        className="bg-[#151515] px-3 py-2 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={!product.isPurchasable}
+                        onClick={() => addToCart(product.id, { checkout: true })}
+                        type="button"
+                      >
+                        {!product.isPurchasable ? "Preview only" : product.isFree ? "Get free" : "Buy now"}
+                      </button>
                       <button className="border border-[#151515] px-3 py-2 text-sm font-bold uppercase transition hover:bg-[#f2efe7]" onClick={() => setSelectedProduct(product)} type="button">
                         Preview
                       </button>
@@ -833,24 +1109,47 @@ export default function Home() {
               })}
             </div>
 
-            <aside className="h-fit border border-[#151515] bg-[#e9e2d4] p-4 shadow-[8px_8px_0_#151515] lg:sticky lg:top-24">
-              <div className="border border-[#151515] bg-white p-4">
+            <aside className="h-fit border border-[#151515] bg-[#e9e2d4] p-3 shadow-[8px_8px_0_#151515] lg:sticky lg:top-24">
+              <div className="mb-3 hidden border border-[#151515] bg-white p-3 lg:block">
+                <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#6f6a5e]">Filter catalog</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {storeFilters.map((filter) => (
+                    <button
+                      className={`border px-3 py-2 text-xs font-bold uppercase transition ${
+                        storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
+                      }`}
+                      key={filter}
+                      onClick={() => setStoreFilter(filter)}
+                      type="button"
+                    >
+                      {filter === "all" ? "All" : typeLabel[filter]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="border border-[#151515] bg-white p-3">
+                <ProductCover categoryName={selectedCategory?.name ?? "Catalog"} className="mb-3 aspect-[1.85]" compact product={selectedProduct} />
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#b34b44]">Selected drop</p>
-                <h3 className="mt-2 text-4xl font-bold leading-none [font-family:var(--font-heading)]">{selectedProduct.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#60615b]">{selectedProduct.longDescription}</p>
+                <h3 className="mt-1 text-3xl font-bold leading-none [font-family:var(--font-heading)]">{selectedProduct.title}</h3>
+                <p className="mt-2 text-sm leading-5 text-[#60615b]">{selectedProduct.longDescription}</p>
 
-                <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
-                  <div className="border border-[#d8d0c0] bg-[#fbfaf6] p-3">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div className="border border-[#d8d0c0] bg-[#fbfaf6] p-2">
                     <p className="text-[0.65rem] font-bold uppercase text-[#8a8376]">Price</p>
                     <p className="mt-1 font-bold">{formatPrice(selectedProduct)}</p>
                   </div>
-                  <div className="border border-[#d8d0c0] bg-[#fbfaf6] p-3">
+                  <div className="border border-[#d8d0c0] bg-[#fbfaf6] p-2">
                     <p className="text-[0.65rem] font-bold uppercase text-[#8a8376]">Category</p>
                     <p className="mt-1 font-bold">{selectedCategory?.name ?? "Catalog"}</p>
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {!selectedProduct.isPurchasable ? (
+                    <span className="border border-[#151515] bg-[#151515] px-2 py-1 text-xs font-bold uppercase text-white">
+                      {selectedProduct.statusLabel ?? "Preview only"}
+                    </span>
+                  ) : null}
                   {selectedProduct.compatibility.map((item) => (
                     <span className="border border-[#d8d0c0] bg-[#fbfaf6] px-2 py-1 text-xs font-bold uppercase text-[#55554f]" key={item}>
                       {item}
@@ -858,10 +1157,21 @@ export default function Home() {
                   ))}
                 </div>
 
-                <Link className="mt-6 block bg-[#151515] px-4 py-3 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d]" href={`/products/${selectedProduct.slug}`}>
-                  {selectedProduct.isFree ? "Download free" : "Buy now"}
-                </Link>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    className="bg-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!selectedProduct.isPurchasable}
+                    onClick={() => addToCart(selectedProduct.id, { checkout: true })}
+                    type="button"
+                  >
+                    {!selectedProduct.isPurchasable ? "Preview only" : selectedProduct.isFree ? "Get free" : "Buy now"}
+                  </button>
+                  <Link className="border border-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-[#151515] transition hover:bg-[#f5f0e7]" href={`/products/${selectedProduct.slug}`}>
+                    View detail
+                  </Link>
+                </div>
               </div>
+
             </aside>
           </div>
         </div>

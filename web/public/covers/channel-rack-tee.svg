@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Channel Rack Tee cover art</title>
+  <desc id="desc">Merch preview cover for a black channel rack t-shirt.</desc>
+  <rect width="900" height="720" fill="#111315"/>
+  <rect x="54" y="54" width="792" height="612" fill="#1b1d20" stroke="#8ca7ad" stroke-width="6"/>
+  <path d="M330 170h240l72 96-72 54v210H330V320l-72-54z" fill="#070808" stroke="#d8d0c0" stroke-width="8"/>
+  <g fill="#78dcca">
+    <rect x="370" y="292" width="160" height="18"/>
+    <rect x="370" y="332" width="102" height="18"/>
+    <rect x="370" y="372" width="196" height="18"/>
+  </g>
+  <text x="94" y="132" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#8ca7ad">MERCH PREVIEW</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="70" font-weight="800" fill="#eee8dc">CHANNEL RACK TEE</text>
+</svg>

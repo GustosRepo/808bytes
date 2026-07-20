@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Silver Loop Archive cover art</title>
+  <desc id="desc">Loop pack cover with silver clip lanes and MIDI blocks.</desc>
+  <rect width="900" height="720" fill="#101113"/>
+  <rect x="50" y="50" width="800" height="620" fill="#1b1d20" stroke="#8d98aa" stroke-width="6"/>
+  <path d="M116 166h668M116 258h668M116 350h668M116 442h668" stroke="#383d44" stroke-width="4"/>
+  <rect x="140" y="132" width="220" height="68" fill="#8d98aa"/>
+  <rect x="396" y="224" width="310" height="68" fill="#8ca7ad"/>
+  <rect x="188" y="316" width="420" height="68" fill="#c19a5b"/>
+  <rect x="476" y="408" width="240" height="68" fill="#8fa66a"/>
+  <text x="94" y="560" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#cfd4dc">50 LOOPS + STEMS</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="68" font-weight="800" fill="#eee8dc">SILVER LOOP</text>
+</svg>

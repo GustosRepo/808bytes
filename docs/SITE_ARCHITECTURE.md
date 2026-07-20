@@ -5,9 +5,9 @@
 1. Home
 2. Product Detail
 3. About
-4. Cart (planned)
-5. Checkout (planned)
-6. Download/Order Confirmation (planned)
+4. Cart
+5. Checkout
+6. Download/Order Confirmation
 7. Legal Pages (planned)
 
 ## Home Structure
@@ -66,6 +66,7 @@ The About page remains a scrollable `ABOUT_808BYTES.flp` project/session view wi
 - Workstation and Store links scroll within Home
 - Product cards link to shareable product detail routes
 - Preview actions stay on Home and update the selected product
+- Cart and Checkout routes are separate from Home to keep purchase flow focused
 - Shopping controls must use explicit ecommerce labels
 - Musical controls must not masquerade as purchase actions
 

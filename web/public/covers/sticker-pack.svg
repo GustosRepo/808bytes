@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">808bytes Sticker Pack cover art</title>
+  <desc id="desc">Merch preview cover for matte studio stickers.</desc>
+  <rect width="900" height="720" fill="#111315"/>
+  <rect x="54" y="54" width="792" height="612" fill="#202124" stroke="#f4c95d" stroke-width="6"/>
+  <g transform="translate(144 150)">
+    <rect width="170" height="120" rx="10" fill="#78dcca" transform="rotate(-8 85 60)"/>
+    <rect x="220" width="170" height="120" rx="10" fill="#f05d5e" transform="rotate(7 305 60)"/>
+    <rect x="440" width="170" height="120" rx="10" fill="#8fa66a" transform="rotate(-5 525 60)"/>
+    <rect x="110" y="180" width="170" height="120" rx="10" fill="#f4c95d" transform="rotate(6 195 240)"/>
+    <rect x="340" y="180" width="170" height="120" rx="10" fill="#8d98aa" transform="rotate(-7 425 240)"/>
+  </g>
+  <text x="94" y="132" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#f4c95d">MERCH PREVIEW</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="70" font-weight="800" fill="#eee8dc">STICKER PACK</text>
+</svg>

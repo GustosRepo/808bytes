@@ -39,12 +39,89 @@
 
 ## Current Limitations
 
-- Macro knobs are visual and do not yet modify audio parameters.
+- Macro knobs now affect audio parameters, but browser-specific tuning is still required.
 - Workstation patterns are not persisted, exported, or recorded.
 - Synthesized percussion is intentionally lightweight; production samples can replace it later.
 - Product covers remain generated placeholder visuals.
-- Checkout, cart, and file delivery are not implemented.
+- Cart and checkout UI are not implemented yet.
+- Commerce backend currently uses in-memory order/grant storage (prototype only; no persistent database yet).
+- Stripe checkout and webhook routes require environment configuration to run live.
 - Product preview does not yet play the actual product audio.
+
+## Commerce Backend (M1) Status
+
+Implemented route handlers:
+- POST /api/cart/quote
+- POST /api/checkout/session
+- POST /api/checkout/free
+- POST /api/webhooks/stripe
+- GET /api/download/[grantToken] (prototype response; signed storage URL wiring is M2)
+
+Behavior:
+- Server-side cart validation/pricing is based on product ids from web/lib/store-data.ts.
+- Free-only checkout creates paid-ready orders and prototype download grants.
+- Paid checkout creates Stripe sessions or mock sessions when COMMERCE_MOCK_CHECKOUT=true.
+- Stripe webhook finalizes matching pending orders by checkout session id.
+
+Required env for live Stripe:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+
+Optional local dev fallback:
+- COMMERCE_MOCK_CHECKOUT=true
+
+## Commerce UI Status
+
+Implemented:
+- Home storefront includes client cart state persisted to localStorage.
+- Product cards and selected-product panel now add items to cart.
+- Product detail page action adds items to the same shared cart storage.
+- Dedicated commerce routes are live:
+	- /cart for quantity review and cart management
+	- /checkout for focused email capture and checkout action
+- Checkout page posts to:
+	- POST /api/checkout/session for paid/mixed carts
+	- POST /api/checkout/free for free-only carts
+- Confirmation routes are implemented:
+	- /checkout/success
+	- /checkout/cancel
+	- /checkout/mock (for COMMERCE_MOCK_CHECKOUT=true)
+- Order status helper routes are implemented:
+	- GET /api/orders/lookup
+	- POST /api/orders/mock-complete
+
+Current UI limitations:
+- Order lookup is prototype-level and does not yet enforce customer/session authorization checks.
+- Cart is local-browser scoped and not yet account-synced.
+- Cart is not yet persisted in a backend user profile.
+
+## Auth And Access Strategy
+
+- Follow a phased auth approach instead of building full dual-login at the start.
+- Keep checkout guest-first to reduce purchase friction.
+- Keep admin access separate from customer access from day one.
+
+Phase 1 (Commerce foundation):
+- Guest checkout for paid and free products.
+- Delivery via signed, expiring download links.
+- Email receipts with secure re-download links.
+
+Phase 2 (Customer portal):
+- Add optional passwordless magic-link sign-in.
+- Add order history and re-download management.
+- Support claiming previous guest orders via email verification.
+
+Phase 3 (Admin hardening):
+- Separate admin route and role-based access control.
+- Require MFA for admin users.
+- Add audit logs for product, order, and refund actions.
+
+Non-goals right now:
+- Do not block checkout behind account creation.
+- Do not share admin and customer authorization logic in one role check.
+
+Implementation spec:
+- See docs/PHASE4_COMMERCE_AUTH_SPEC.md for Phase 4 API, data model, and flow definitions.
 
 ## Verification
 
@@ -59,8 +136,8 @@ Browser QA should include starting/stopping Beat and Melody independently, editi
 
 ## Recommended Next Steps
 
-1. Add a master Stop control and functional Tone/Drive/Space/Glue macros.
+1. Tune audio balances across Safari, Chrome, Firefox, and mobile devices.
 2. Add real product audio previews and final product artwork.
-3. Implement paid checkout and free-download delivery.
+3. Replace in-memory commerce storage with persistent database models and migration scripts.
 4. Add workstation and commerce analytics.
-5. Run keyboard, screen-reader, mobile, and cross-browser audio QA.
+5. Run keyboard, screen-reader, mobile, and cross-browser QA.

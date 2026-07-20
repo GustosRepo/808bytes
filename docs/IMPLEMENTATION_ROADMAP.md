@@ -1,5 +1,7 @@
 # Implementation Roadmap
 
+Live progress tracker: see `docs/PROGRESS_CHECKLIST.md`
+
 ## Phase 1: Playable Brand Experience
 
 - Build the hardware-inspired workstation hero
@@ -38,10 +40,14 @@ Definition of done:
 
 ## Phase 4: Commerce
 
+Detailed spec: docs/PHASE4_COMMERCE_AUTH_SPEC.md
+
 - Add cart state and cart UI
 - Integrate paid checkout
 - Add free-product delivery and optional email capture
 - Add success, failure, and download confirmation states
+- Keep checkout guest-first; add customer accounts later as optional portal
+- Implement separate admin access with role controls and MFA baseline
 
 Definition of done:
 - Paid and free products can be acquired end to end on desktop and mobile

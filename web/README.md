@@ -33,8 +33,9 @@ The workstation uses synthesized Web Audio voices and does not require audio ass
 
 ## Known Gaps
 
-- Tone, Drive, Space, and Glue knobs are not wired to audio parameters
-- No master Stop/reset control yet
+- Tone, Drive, Space, and Glue knobs are wired, but still need browser/device tuning
+- Master Stop/reset is implemented
+- Keyboard shortcuts and focus-visible styling are implemented, but cross-browser/device tuning is still needed
 - Product artwork and audio previews are placeholders
 - Cart, checkout, and download delivery are not implemented
 

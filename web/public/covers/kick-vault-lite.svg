@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Kick Vault Lite cover art</title>
+  <desc id="desc">Free kick one-shot pack cover with low-end waveform.</desc>
+  <rect width="900" height="720" fill="#111315"/>
+  <rect x="54" y="54" width="792" height="612" fill="#171a17" stroke="#8fa66a" stroke-width="6"/>
+  <path d="M104 370c84-210 152 210 236 0s152 210 236 0 152 210 236 0" fill="none" stroke="#78f0a2" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="450" cy="350" r="176" fill="none" stroke="#3d4b3a" stroke-width="18"/>
+  <text x="94" y="132" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#78f0a2">FREE / 40 KICKS</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="72" font-weight="800" fill="#eee8dc">KICK VAULT LITE</text>
+</svg>

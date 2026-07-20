@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Midnight Drums Vol. 1 cover art</title>
+  <desc id="desc">Drum pack cover with dark pads and red hits.</desc>
+  <rect width="900" height="720" fill="#0b0d12"/>
+  <rect x="52" y="52" width="796" height="616" fill="#151923" stroke="#f05d5e" stroke-width="6"/>
+  <g transform="translate(142 128)">
+    <rect width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+    <rect x="148" width="116" height="116" fill="#f05d5e"/>
+    <rect x="296" width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+    <rect x="444" width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+    <rect y="148" width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+    <rect x="148" y="148" width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+    <rect x="296" y="148" width="116" height="116" fill="#f4c95d"/>
+    <rect x="444" y="148" width="116" height="116" fill="#252b34" stroke="#454b55" stroke-width="4"/>
+  </g>
+  <text x="94" y="522" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#f4c95d">120 WAV HITS</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="68" font-weight="800" fill="#eee8dc">MIDNIGHT DRUMS</text>
+</svg>

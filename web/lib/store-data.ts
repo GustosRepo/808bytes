@@ -14,6 +14,8 @@ export type Product = {
   slug: string;
   categoryId: string;
   type: ProductType;
+  fulfillment: "digital" | "physical";
+  isPurchasable: boolean;
   shortDescription: string;
   longDescription: string;
   isFree: boolean;
@@ -22,6 +24,7 @@ export type Product = {
   compatibility: string[];
   featured?: boolean;
   badge?: string;
+  statusLabel?: string;
 };
 
 export const categories: Category[] = [
@@ -69,12 +72,14 @@ export const products: Product[] = [
     slug: "neon-grain",
     categoryId: "vsts",
     type: "vst",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "Bitcrushed texture synth.",
     longDescription:
       "Neon Grain blends lo-fi oscillators with quick macro controls for distorted leads and pads.",
     isFree: false,
     price: 19,
-    cover: "/covers/neon-grain.jpg",
+    cover: "/covers/neon-grain.svg",
     compatibility: ["VST3", "AU", "macOS", "Windows"],
     featured: true,
     badge: "NEW",
@@ -85,12 +90,14 @@ export const products: Product[] = [
     slug: "tape-bloom",
     categoryId: "vsts",
     type: "vst",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "Analog-style saturation and width.",
     longDescription:
       "Tape Bloom gives drums and melodies a warm tape profile with stereo bloom and controlled noise.",
     isFree: true,
     price: 0,
-    cover: "/covers/tape-bloom.jpg",
+    cover: "/covers/tape-bloom.svg",
     compatibility: ["VST3", "AU", "macOS", "Windows"],
     featured: true,
     badge: "FREE",
@@ -101,12 +108,14 @@ export const products: Product[] = [
     slug: "midnight-drums-vol-1",
     categoryId: "packs",
     type: "pack",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "120 trap and drill drum hits.",
     longDescription:
       "A focused drum toolkit with crisp 808s, snares, hats, and percs designed for dark modern beats.",
     isFree: false,
     price: 24,
-    cover: "/covers/midnight-drums.jpg",
+    cover: "/covers/midnight-drums.svg",
     compatibility: ["WAV", "44.1kHz", "24-bit"],
     featured: true,
   },
@@ -116,12 +125,14 @@ export const products: Product[] = [
     slug: "silver-loop-archive",
     categoryId: "packs",
     type: "pack",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "50 melodic loops with stems.",
     longDescription:
       "Song-starter loops and stems built around keys, bells, and ambient textures for quick arrangement ideas.",
     isFree: false,
     price: 29,
-    cover: "/covers/silver-loop.jpg",
+    cover: "/covers/silver-loop.svg",
     compatibility: ["WAV", "MIDI"],
   },
   {
@@ -130,12 +141,14 @@ export const products: Product[] = [
     slug: "kick-vault-lite",
     categoryId: "oneshots",
     type: "oneshot",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "40 clean kick one-shots.",
     longDescription:
       "A lightweight free pack of punchy kicks that layer cleanly in trap, house, and hip-hop projects.",
     isFree: true,
     price: 0,
-    cover: "/covers/kick-vault-lite.jpg",
+    cover: "/covers/kick-vault-lite.svg",
     compatibility: ["WAV", "24-bit"],
   },
   {
@@ -144,12 +157,14 @@ export const products: Product[] = [
     slug: "snare-lab-808",
     categoryId: "oneshots",
     type: "oneshot",
+    fulfillment: "digital",
+    isPurchasable: true,
     shortDescription: "80 snare and rim one-shots.",
     longDescription:
       "Tight snare and rim collection with multiple textures for clean layering and punch.",
     isFree: false,
     price: 12,
-    cover: "/covers/snare-lab.jpg",
+    cover: "/covers/snare-lab.svg",
     compatibility: ["WAV", "24-bit"],
   },
   {
@@ -158,13 +173,16 @@ export const products: Product[] = [
     slug: "channel-rack-tee",
     categoryId: "merch",
     type: "merch",
+    fulfillment: "physical",
+    isPurchasable: false,
     shortDescription: "Heavyweight black tee.",
     longDescription:
       "Minimal front print, DAW-inspired back grid. Heavyweight cotton cut for studio and street.",
     isFree: false,
     price: 38,
-    cover: "/covers/channel-rack-tee.jpg",
+    cover: "/covers/channel-rack-tee.svg",
     compatibility: ["S", "M", "L", "XL"],
+    statusLabel: "Shipping setup pending",
   },
   {
     id: "p008",
@@ -172,14 +190,17 @@ export const products: Product[] = [
     slug: "808bytes-sticker-pack",
     categoryId: "merch",
     type: "merch",
+    fulfillment: "physical",
+    isPurchasable: false,
     shortDescription: "5 matte studio stickers.",
     longDescription:
       "Laptop-safe matte vinyl sticker set with 5 icon designs based on the track lane system.",
     isFree: false,
     price: 9,
-    cover: "/covers/sticker-pack.jpg",
+    cover: "/covers/sticker-pack.svg",
     compatibility: ["Matte vinyl"],
     featured: true,
+    statusLabel: "Shipping setup pending",
   },
 ];
 

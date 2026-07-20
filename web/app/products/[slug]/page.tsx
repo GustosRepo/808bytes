@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import AddToCartCta from "@/components/add-to-cart-cta";
 import { DawButtonLink, DawMenuBar } from "@/components/daw-chrome";
+import ProductCover from "@/components/product-cover";
 import { categories, getProductBySlug } from "@/lib/store-data";
 
 type ProductPageProps = {
@@ -22,12 +24,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <header className="border-b border-[#090a0c] bg-[#141518]">
           <DawMenuBar
             items={[
-              { label: "Shop", href: "/#catalog" },
-              { label: "Free Downloads", href: "/#catalog" },
-              { label: "Plugins", href: "/#catalog" },
-              { label: "Packs", href: "/#catalog" },
+              { label: "Shop", href: "/#store" },
+              { label: "Free Downloads", href: "/#store" },
+              { label: "Plugins", href: "/#store" },
+              { label: "Packs", href: "/#store" },
               { label: "About", href: "/about" },
-              { label: "Cart", href: "/#product-actions" },
+              { label: "Cart", href: "/cart" },
             ]}
           />
           <div className="flex flex-wrap items-center gap-2 px-3 py-2">
@@ -39,7 +41,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.isFree ? "FREE" : `$${product.price}`}
             </span>
             <span className="border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-1 text-[0.68rem] font-bold uppercase text-[var(--commerce-text)]">
-              {product.isFree ? "Free download" : "Ready to buy"}
+              {!product.isPurchasable ? (product.statusLabel ?? "Preview only") : product.isFree ? "Free download" : "Ready to buy"}
             </span>
           </div>
         </header>
@@ -57,28 +59,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <h1 className="text-4xl font-semibold [font-family:var(--font-heading)]">{product.title}</h1>
                   <p className="mt-2 max-w-[680px] text-sm leading-relaxed text-[#cbc5ba]">{product.longDescription}</p>
 
-                  <div
-                    className="mt-5 h-[220px] border border-[#34363a] bg-[#1b1d20]"
-                    style={{
-                      background:
-                        "repeating-linear-gradient(90deg, rgba(132,130,120,0.14) 0, rgba(132,130,120,0.14) 1px, transparent 1px, transparent 34px), repeating-linear-gradient(180deg, rgba(255,255,255,0.045) 0, rgba(255,255,255,0.045) 1px, transparent 1px, transparent 28px), #1b1d20",
-                    }}
-                  >
-                    <div className="flex h-full items-center gap-1 overflow-hidden px-4">
-                      {Array.from({ length: 48 }).map((_, index) => (
-                        <span
-                          aria-hidden="true"
-                          className="w-2 rounded-sm"
-                          key={`detail-wave-${index}`}
-                          style={{
-                            height: 32 + ((index * 13 + product.title.length * 3) % 132),
-                            backgroundColor: category?.accent ?? "var(--accent-cyan)",
-                            opacity: index % 5 === 0 ? 0.45 : 0.85,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  <ProductCover categoryName={category?.name ?? "Catalog"} className="mt-5 aspect-[1.4]" product={product} />
                 </div>
 
                 <div className="border border-[#34363a] bg-[#1b1d20] p-3">
@@ -130,14 +111,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   ))}
                 </div>
 
-                <button
-                  className="mt-5 w-full border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-2 text-sm font-bold uppercase text-[var(--commerce-text)] transition hover:bg-[var(--commerce-hover)]"
-                  type="button"
-                >
-                  {product.isFree ? "Download free" : "Buy now"}
-                </button>
+                <AddToCartCta isFree={product.isFree} isPurchasable={product.isPurchasable} productId={product.id} statusLabel={product.statusLabel} />
                 <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
-                  This is the shopping action for the selected product. The DAW styling is visual context.
+                  {product.isPurchasable
+                    ? "Opens checkout with this item ready for delivery."
+                    : "Preview only until shipping and fulfillment are ready."}
                 </p>
               </div>
             </div>

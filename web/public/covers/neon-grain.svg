@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title desc">
+  <title id="title">Neon Grain cover art</title>
+  <desc id="desc">Abstract plugin cover with grain blocks and waveform bars.</desc>
+  <rect width="900" height="720" fill="#111315"/>
+  <rect x="46" y="46" width="808" height="628" fill="#1b1d20" stroke="#78dcca" stroke-width="6"/>
+  <path d="M94 146h712M94 248h712M94 350h712M94 452h712M94 554h712" stroke="#3d4244" stroke-width="2"/>
+  <path d="M140 580V284M188 580V214M236 580V366M284 580V166M332 580V316M380 580V242M428 580V390M476 580V132M524 580V308M572 580V230M620 580V378M668 580V188M716 580V338" stroke="#78f0a2" stroke-width="22"/>
+  <rect x="94" y="94" width="220" height="54" fill="#78dcca"/>
+  <text x="112" y="132" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#07110a">VST3 / AU</text>
+  <text x="94" y="650" font-family="Arial, sans-serif" font-size="74" font-weight="800" fill="#eee8dc">NEON GRAIN</text>
+</svg>
