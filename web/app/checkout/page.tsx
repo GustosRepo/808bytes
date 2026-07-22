@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { products, type Product } from "@/lib/store-data";
-import { clearCartItems, readCartItems, setCartItemQuantity, type CartItem, writeCartItems } from "@/lib/cart-client";
+import {
+  CART_CHANGE_EVENT,
+  clearCartItems,
+  readCartItems,
+  setCartItemQuantity,
+  type CartItem,
+  writeCartItems,
+} from "@/lib/cart-client";
 
 type CartQuote = {
   items: Array<{
@@ -93,14 +100,24 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
+    const syncCart = () => {
       const items = readCartItems();
       setCartItems(items);
       void requestQuote(items);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      syncCart();
     }, 0);
+    window.addEventListener(CART_CHANGE_EVENT, syncCart);
+    window.addEventListener("focus", syncCart);
+    window.addEventListener("pageshow", syncCart);
 
     return () => {
       window.clearTimeout(timeoutId);
+      window.removeEventListener(CART_CHANGE_EVENT, syncCart);
+      window.removeEventListener("focus", syncCart);
+      window.removeEventListener("pageshow", syncCart);
     };
   }, []);
 
@@ -157,6 +174,7 @@ export default function CheckoutPage() {
         error?: string;
         checkoutUrl?: string;
         order?: { id: string };
+        orderToken?: string;
         downloads?: Array<{ url: string }>;
       };
 
@@ -166,6 +184,9 @@ export default function CheckoutPage() {
       }
 
       if (payload.checkoutUrl) {
+        clearCartItems();
+        setCartItems([]);
+        setCartQuote(null);
         window.location.href = payload.checkoutUrl;
         return;
       }
@@ -176,7 +197,7 @@ export default function CheckoutPage() {
         setCartQuote(null);
         const orderId = payload.order?.id;
         if (orderId) {
-          window.location.href = `/checkout/success?order_id=${encodeURIComponent(orderId)}&free=1`;
+          window.location.href = `/checkout/success?order_id=${encodeURIComponent(orderId)}&order_token=${encodeURIComponent(payload.orderToken ?? "")}&free=1`;
           return;
         }
 

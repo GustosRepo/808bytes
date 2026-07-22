@@ -21,6 +21,7 @@ export type Product = {
   isFree: boolean;
   price: number;
   cover: string;
+  downloadKey?: string;
   compatibility: string[];
   featured?: boolean;
   badge?: string;
@@ -80,6 +81,7 @@ export const products: Product[] = [
     isFree: false,
     price: 19,
     cover: "/covers/neon-grain.svg",
+    downloadKey: "products/neon-grain/neon-grain.zip",
     compatibility: ["VST3", "AU", "macOS", "Windows"],
     featured: true,
     badge: "NEW",
@@ -98,6 +100,7 @@ export const products: Product[] = [
     isFree: true,
     price: 0,
     cover: "/covers/tape-bloom.svg",
+    downloadKey: "products/tape-bloom/tape-bloom.zip",
     compatibility: ["VST3", "AU", "macOS", "Windows"],
     featured: true,
     badge: "FREE",
@@ -116,6 +119,7 @@ export const products: Product[] = [
     isFree: false,
     price: 24,
     cover: "/covers/midnight-drums.svg",
+    downloadKey: "products/midnight-drums-vol-1/midnight-drums-vol-1.zip",
     compatibility: ["WAV", "44.1kHz", "24-bit"],
     featured: true,
   },
@@ -133,6 +137,7 @@ export const products: Product[] = [
     isFree: false,
     price: 29,
     cover: "/covers/silver-loop.svg",
+    downloadKey: "products/silver-loop-archive/silver-loop-archive.zip",
     compatibility: ["WAV", "MIDI"],
   },
   {
@@ -149,6 +154,7 @@ export const products: Product[] = [
     isFree: true,
     price: 0,
     cover: "/covers/kick-vault-lite.svg",
+    downloadKey: "products/kick-vault-lite/kick-vault-lite.zip",
     compatibility: ["WAV", "24-bit"],
   },
   {
@@ -165,6 +171,7 @@ export const products: Product[] = [
     isFree: false,
     price: 12,
     cover: "/covers/snare-lab.svg",
+    downloadKey: "products/snare-lab-808/snare-lab-808.zip",
     compatibility: ["WAV", "24-bit"],
   },
   {

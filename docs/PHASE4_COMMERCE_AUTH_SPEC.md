@@ -1,6 +1,6 @@
 # Phase 4 Commerce And Auth Technical Spec
 
-Last updated: 2026-07-17
+Last updated: 2026-07-21
 
 ## Purpose
 
@@ -26,7 +26,7 @@ Out of scope:
 
 Recommended baseline stack:
 - App framework: Next.js App Router route handlers
-- Payment provider: Stripe Checkout
+- Payment provider: Lemon Squeezy Checkout
 - Database: Postgres (Supabase or Neon are acceptable)
 - Email: transactional provider (Resend or equivalent)
 - File storage: object storage with signed URL support (S3/R2/Supabase Storage)
@@ -51,7 +51,7 @@ Fields:
 Additional fields beyond current model:
 - customerIdentityId (string uuid nullable)
 - email (string required)
-- paymentProvider (enum: stripe, none)
+- paymentProvider (enum: lemon_squeezy, none)
 - paymentIntentId (string nullable)
 - checkoutSessionId (string nullable)
 - fulfillmentStatus (enum: pending, ready, delivered, failed)
@@ -81,6 +81,15 @@ Fields:
 - expiresAt (datetime)
 - maxDownloads (number)
 - downloadCount (number)
+- revokedAt (datetime nullable)
+- createdAt (datetime)
+
+## OrderAccessToken
+Fields:
+- id (string uuid)
+- orderId (string uuid)
+- tokenHash (string)
+- expiresAt (datetime)
 - revokedAt (datetime nullable)
 - createdAt (datetime)
 
@@ -119,15 +128,15 @@ Public and customer routes:
   - Input: product ids and quantities
   - Output: validated prices, subtotal, tax, total
 - POST /api/checkout/session
-  - Creates Stripe Checkout session for paid carts
+  - Creates Lemon Squeezy checkout for paid carts
 - POST /api/checkout/free
   - Creates order and fulfillment for free-only carts
-- POST /api/webhooks/stripe
-  - Verifies Stripe signature, marks paid orders, triggers fulfillment
+- POST /api/webhooks/lemon-squeezy
+  - Verifies Lemon Squeezy signature, marks paid orders, triggers fulfillment
 - GET /api/orders/:orderId
-  - Returns order summary if request is authorized by token/session
+  - Returns order summary if request includes a valid order access token
 - POST /api/orders/:orderId/resend
-  - Resends confirmation and download links to order email
+  - Resends confirmation and download links to order email if request includes a valid order access token
 - GET /api/download/:grantToken
   - Verifies grant token and returns signed storage URL (short expiry)
 - POST /api/auth/magic-link/request
@@ -145,8 +154,8 @@ Admin routes (separate auth):
 
 Paid flow:
 1. User starts checkout from cart.
-2. Create Stripe session and pending order.
-3. Stripe webhook confirms payment.
+2. Create Lemon Squeezy checkout and pending order.
+3. Lemon Squeezy webhook confirms payment.
 4. Create download grants for digital items.
 5. Send receipt + download access email.
 
@@ -166,7 +175,8 @@ Order states:
 Customer:
 - Default: no account required for checkout
 - Optional portal later: magic-link only
-- Order access granted by verified email token or magic-link session
+- Immediate order access is granted by an order access token in the checkout success URL and receipt email link
+- Optional portal access can later be granted by verified email token or magic-link session
 
 Admin:
 - Separate login path and session scope
@@ -187,15 +197,24 @@ Admin:
 M1: Commerce foundation
 - Cart quote endpoint [implemented]
 - Paid checkout session creation [implemented]
-- Stripe webhook handling [implemented]
+- Lemon Squeezy webhook handling [implemented]
 - Free checkout endpoint [implemented]
-- Order success/failure pages
+- Order success/failure pages [implemented]
 
 M2: Fulfillment reliability
-- Download grant generation
-- Signed URL download endpoint
-- Receipt and resend email endpoints
+- Download grant generation [implemented]
+- Signed URL download endpoint [implemented]
+- Receipt and resend email endpoints [implemented]
+- Order access tokens for lookup and resend authorization [implemented]
 - Basic support tooling for failed fulfillment
+
+Local verification:
+- Lemon Squeezy test checkout and `order_created` webhook were verified through ngrok on 2026-07-21.
+- Webhook processing finalizes the local Postgres order and creates download grants.
+- Order lookup and receipt resend reject missing/invalid order access tokens and accept valid tokens.
+- Resend delivered a live receipt email from the verified `808bytes.com` sender domain.
+- Receipt email delivery failures are handled without breaking the already-fulfilled Lemon webhook.
+- Production verification still needs the deployed `https://808bytes.com/api/webhooks/lemon-squeezy` endpoint.
 
 M3: Access layer
 - Magic-link customer portal (optional, post-checkout)

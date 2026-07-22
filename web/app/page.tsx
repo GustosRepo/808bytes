@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductCover from "@/components/product-cover";
 import { categories, getFeaturedProducts, products, type Product } from "@/lib/store-data";
-import { readCartItems, upsertCartItem, writeCartItems, type CartItem } from "@/lib/cart-client";
+import {
+  CART_CHANGE_EVENT,
+  readCartItems,
+  upsertCartItem,
+  writeCartItems,
+  type CartItem,
+} from "@/lib/cart-client";
 
 const typeLabel: Record<Product["type"], string> = {
   vst: "Plugin",
@@ -194,12 +200,22 @@ export default function Home() {
   const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
+    const syncCart = () => {
       setCartItems(readCartItems());
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      syncCart();
     }, 0);
+    window.addEventListener(CART_CHANGE_EVENT, syncCart);
+    window.addEventListener("focus", syncCart);
+    window.addEventListener("pageshow", syncCart);
 
     return () => {
       window.clearTimeout(timeoutId);
+      window.removeEventListener(CART_CHANGE_EVENT, syncCart);
+      window.removeEventListener("focus", syncCart);
+      window.removeEventListener("pageshow", syncCart);
     };
   }, []);
 

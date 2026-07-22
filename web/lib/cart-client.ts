@@ -4,6 +4,15 @@ export type CartItem = {
 };
 
 export const CART_STORAGE_KEY = "808bytes_cart_v1";
+export const CART_CHANGE_EVENT = "808bytes_cart_change";
+
+const notifyCartChanged = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(CART_CHANGE_EVENT));
+};
 
 const normalizeItems = (items: CartItem[]) =>
   items
@@ -42,6 +51,7 @@ export const writeCartItems = (items: CartItem[]) => {
 
   const normalized = normalizeItems(items);
   window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalized));
+  notifyCartChanged();
 };
 
 export const clearCartItems = () => {
@@ -50,6 +60,7 @@ export const clearCartItems = () => {
   }
 
   window.localStorage.removeItem(CART_STORAGE_KEY);
+  notifyCartChanged();
 };
 
 export const upsertCartItem = (items: CartItem[], productId: string, delta = 1) => {

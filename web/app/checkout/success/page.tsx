@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { clearCartItems } from "@/lib/cart-client";
 
 type OrderLookup = {
   id: string;
@@ -22,14 +23,27 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const orderId = searchParams.get("order_id");
+  const orderToken = searchParams.get("order_token");
   const isFreeFlow = searchParams.get("free") === "1";
 
   const [order, setOrder] = useState<OrderLookup | null>(null);
   const [loading, setLoading] = useState(Boolean(sessionId || orderId));
   const [error, setError] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const query = orderId ? `order_id=${encodeURIComponent(orderId)}` : sessionId ? `session_id=${encodeURIComponent(sessionId)}` : "";
+    if (orderId || sessionId) {
+      clearCartItems();
+    }
+  }, [orderId, sessionId]);
+
+  useEffect(() => {
+    const query = orderId
+      ? `order_id=${encodeURIComponent(orderId)}&order_token=${encodeURIComponent(orderToken ?? "")}`
+      : sessionId
+        ? `session_id=${encodeURIComponent(sessionId)}&order_token=${encodeURIComponent(orderToken ?? "")}`
+        : "";
 
     if (!query) {
       return;
@@ -50,6 +64,7 @@ function CheckoutSuccessContent() {
         }
 
         setOrder(payload.order);
+        clearCartItems();
       } catch {
         setError("Network error while loading order details.");
       } finally {
@@ -58,7 +73,36 @@ function CheckoutSuccessContent() {
     };
 
     void run();
-  }, [orderId, sessionId]);
+  }, [orderId, orderToken, sessionId]);
+
+  const resendReceipt = async () => {
+    if (!order) {
+      return;
+    }
+
+    setIsResending(true);
+    setResendMessage(null);
+
+    try {
+      const response = await fetch(`/api/orders/${encodeURIComponent(order.id)}/resend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: order.email, orderToken }),
+      });
+      const payload = (await response.json()) as { error?: string; downloads?: Array<{ url: string }> };
+
+      if (!response.ok) {
+        setResendMessage(payload.error ?? "Unable to resend receipt.");
+        return;
+      }
+
+      setResendMessage(`Receipt resent. ${payload.downloads?.length ?? 0} fresh download link(s) generated.`);
+    } catch {
+      setResendMessage("Network error while resending receipt.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const heading = useMemo(() => {
     if (order?.status === "paid") {
@@ -131,10 +175,21 @@ function CheckoutSuccessContent() {
           <Link className="bg-[#151515] px-4 py-2 text-sm font-bold uppercase text-white" href="/#store">
             Continue shopping
           </Link>
+          {order?.status === "paid" ? (
+            <button
+              className="border border-[#151515] px-4 py-2 text-sm font-bold uppercase disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isResending}
+              onClick={resendReceipt}
+              type="button"
+            >
+              {isResending ? "Sending..." : "Resend receipt"}
+            </button>
+          ) : null}
           <Link className="border border-[#151515] px-4 py-2 text-sm font-bold uppercase" href="/">
             Back home
           </Link>
         </div>
+        {resendMessage ? <p className="mt-3 text-sm font-bold text-[#5f5d56]">{resendMessage}</p> : null}
       </section>
     </main>
   );

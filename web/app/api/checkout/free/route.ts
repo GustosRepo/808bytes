@@ -3,10 +3,12 @@ import {
   buildDownloadUrls,
   createOrder,
   finalizeOrderAsPaid,
+  hasCommerceDatabaseConfig,
   isValidEmail,
   quoteCart,
   type CartInputItem,
 } from "@/lib/commerce";
+import { sendReceiptEmail } from "@/lib/receipt-email";
 
 type FreeCheckoutBody = {
   email?: string;
@@ -68,7 +70,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const order = createOrder({
+  if (!hasCommerceDatabaseConfig()) {
+    return NextResponse.json(
+      { error: "Postgres is not configured. Set DATABASE_URL or POSTGRES_URL." },
+      { status: 501 },
+    );
+  }
+
+  const created = await createOrder({
     email,
     quote,
     paymentProvider: "none",
@@ -76,16 +85,21 @@ export async function POST(request: Request) {
     fulfillmentStatus: "ready",
   });
 
-  const finalized = finalizeOrderAsPaid(order.id);
+  const finalized = await finalizeOrderAsPaid(created.order.id);
 
   if (!finalized) {
     return NextResponse.json({ error: "Failed to finalize order." }, { status: 500 });
   }
 
   const origin = new URL(request.url).origin;
+  const downloads = buildDownloadUrls({ origin, grants: finalized.createdGrants });
+  const orderAccessUrl = `${origin}/checkout/success?order_id=${encodeURIComponent(finalized.order.id)}&order_token=${created.accessToken}`;
+  const receiptEmail = await sendReceiptEmail({ order: finalized.order, downloads, orderAccessUrl });
 
   return NextResponse.json({
     order: finalized.order,
-    downloads: buildDownloadUrls({ origin, grants: finalized.createdGrants }),
+    orderToken: created.accessToken,
+    downloads,
+    email: receiptEmail,
   });
 }

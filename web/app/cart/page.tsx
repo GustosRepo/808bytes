@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { products, type Product } from "@/lib/store-data";
-import { clearCartItems, readCartItems, setCartItemQuantity, type CartItem, writeCartItems } from "@/lib/cart-client";
+import {
+  CART_CHANGE_EVENT,
+  clearCartItems,
+  readCartItems,
+  setCartItemQuantity,
+  type CartItem,
+  writeCartItems,
+} from "@/lib/cart-client";
 
 const typeLabel: Record<Product["type"], string> = {
   vst: "Plugin",
@@ -18,12 +25,22 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
+    const syncCart = () => {
       setCartItems(readCartItems());
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      syncCart();
     }, 0);
+    window.addEventListener(CART_CHANGE_EVENT, syncCart);
+    window.addEventListener("focus", syncCart);
+    window.addEventListener("pageshow", syncCart);
 
     return () => {
       window.clearTimeout(timeoutId);
+      window.removeEventListener(CART_CHANGE_EVENT, syncCart);
+      window.removeEventListener("focus", syncCart);
+      window.removeEventListener("pageshow", syncCart);
     };
   }, []);
 

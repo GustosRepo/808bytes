@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import Stripe from "stripe";
-import { createOrder, isValidEmail, quoteCart, type CartInputItem } from "@/lib/commerce";
+import {
+  createOrder,
+  hasCommerceDatabaseConfig,
+  isValidEmail,
+  quoteCart,
+  type CartInputItem,
+} from "@/lib/commerce";
+import {
+  createLemonSqueezyCheckout,
+  hasLemonSqueezyCheckoutConfig,
+} from "@/lib/lemon-squeezy";
 
 type CheckoutSessionBody = {
   email?: string;
@@ -9,8 +18,6 @@ type CheckoutSessionBody = {
   successUrl?: string;
   cancelUrl?: string;
 };
-
-const toStripeAmount = (value: number) => Math.round(value * 100);
 
 export async function POST(request: Request) {
   let body: CheckoutSessionBody;
@@ -68,14 +75,18 @@ export async function POST(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
-  const successUrl = body.successUrl ?? `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = body.cancelUrl ?? `${origin}/checkout/cancel`;
 
-  const paidLineItems = quote.items.filter((item) => !item.isFree);
+  if (!hasCommerceDatabaseConfig()) {
+    return NextResponse.json(
+      { error: "Postgres is not configured. Set DATABASE_URL or POSTGRES_URL." },
+      { status: 501 },
+    );
+  }
 
   const mockCheckoutEnabled = process.env.COMMERCE_MOCK_CHECKOUT === "true";
   if (mockCheckoutEnabled) {
-    const order = createOrder({
+    const created = await createOrder({
       email,
       quote,
       paymentProvider: "mock",
@@ -86,60 +97,46 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       mode: "mock",
-      checkoutUrl: `${origin}/checkout/mock?orderId=${order.id}`,
-      orderId: order.id,
+      checkoutUrl: `${origin}/checkout/mock?orderId=${created.order.id}&orderToken=${created.accessToken}`,
+      orderId: created.order.id,
+      orderToken: created.accessToken,
     });
   }
 
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeSecretKey) {
+  if (!hasLemonSqueezyCheckoutConfig()) {
     return NextResponse.json(
       {
-        error: "Stripe is not configured. Set STRIPE_SECRET_KEY or enable COMMERCE_MOCK_CHECKOUT=true.",
+        error:
+          "Lemon Squeezy is not configured. Set LEMON_SQUEEZY_API_KEY, LEMON_SQUEEZY_STORE_ID, and LEMON_SQUEEZY_CHECKOUT_VARIANT_ID or enable COMMERCE_MOCK_CHECKOUT=true.",
       },
       { status: 501 },
     );
   }
 
-  const stripe = new Stripe(stripeSecretKey);
-
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: email,
-    line_items: paidLineItems.map((item) => ({
-      quantity: item.quantity,
-      price_data: {
-        currency: quote.currency.toLowerCase(),
-        unit_amount: toStripeAmount(item.unitPrice),
-        product_data: {
-          name: item.title,
-          metadata: {
-            productId: item.productId,
-            productType: item.type,
-          },
-        },
-      },
-    })),
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: {
-      source: "808bytes",
-    },
-  });
-
-  const order = createOrder({
+  const created = await createOrder({
     email,
     quote,
-    paymentProvider: "stripe",
+    paymentProvider: "lemon_squeezy",
     status: "pending",
     fulfillmentStatus: "pending",
-    checkoutSessionId: session.id,
+  });
+
+  const successUrl =
+    body.successUrl ??
+    `${origin}/checkout/success?order_id=${encodeURIComponent(created.order.id)}&order_token=${created.accessToken}`;
+  const checkout = await createLemonSqueezyCheckout({
+    email,
+    orderId: created.order.id,
+    quote,
+    successUrl,
   });
 
   return NextResponse.json({
-    mode: "stripe",
-    checkoutUrl: session.url,
-    orderId: order.id,
-    checkoutSessionId: session.id,
+    mode: "lemon_squeezy",
+    checkoutUrl: checkout.checkoutUrl,
+    orderId: created.order.id,
+    orderToken: created.accessToken,
+    checkoutSessionId: checkout.checkoutId,
+    cancelUrl,
   });
 }

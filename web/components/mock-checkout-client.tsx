@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { clearCartItems } from "@/lib/cart-client";
 
 export default function MockCheckoutClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("orderId");
+  const orderToken = searchParams.get("orderToken");
 
   const [isFinishing, setIsFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function MockCheckoutClient() {
       const response = await fetch("/api/orders/mock-complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ orderId, orderToken }),
       });
 
       const payload = (await response.json()) as { error?: string; orderId?: string };
@@ -35,7 +37,10 @@ export default function MockCheckoutClient() {
         return;
       }
 
-      router.push(`/checkout/success?order_id=${encodeURIComponent(payload.orderId)}`);
+      clearCartItems();
+      router.push(
+        `/checkout/success?order_id=${encodeURIComponent(payload.orderId)}&order_token=${encodeURIComponent(orderToken ?? "")}`,
+      );
     } catch {
       setError("Network error while finishing mock payment.");
     } finally {
@@ -60,7 +65,7 @@ export default function MockCheckoutClient() {
       <div className="mt-6 flex flex-wrap gap-2">
         <button
           className="bg-[#151515] px-4 py-2 text-sm font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={!orderId || isFinishing}
+          disabled={!orderId || !orderToken || isFinishing}
           onClick={completeMockPayment}
           type="button"
         >
