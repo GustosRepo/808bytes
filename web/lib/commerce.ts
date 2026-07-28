@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Pool, type PoolClient, type QueryResultRow } from "pg";
-import { products, type Product } from "@/lib/store-data";
+import { getProductBySlug, products, type Product } from "@/lib/store-data";
 
 export type CartInputItem = {
   productId: string;
@@ -53,6 +53,67 @@ export type ProductDownloadMetadata = {
   objectKey: string;
   isActive: boolean;
   updatedAt: string;
+};
+
+export type ProductInventoryRecord = {
+  productId: string;
+  sku: string;
+  title: string;
+  slug: string;
+  categoryId: string;
+  type: Product["type"];
+  fulfillment: Product["fulfillment"];
+  shortDescription: string;
+  longDescription: string;
+  price: number;
+  isFree: boolean;
+  isActive: boolean;
+  isPurchasable: boolean;
+  cover: string;
+  objectKey: string | null;
+  compatibility: string[];
+  featured: boolean;
+  badge: string | null;
+  statusLabel: string | null;
+  stockQuantity: number | null;
+  lowStockThreshold: number | null;
+  sortOrder: number;
+  updatedAt: string;
+  soldCount?: number;
+  revenue?: number;
+  grantCount?: number;
+};
+
+export type AdminOrderSummary = {
+  id: string;
+  email: string;
+  status: OrderStatus;
+  fulfillmentStatus: FulfillmentStatus;
+  total: number;
+  currency: "USD";
+  paymentProvider: PaymentProvider;
+  itemCount: number;
+  grantCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminAuditEvent = {
+  id: string;
+  actor: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type OrderAdminNote = {
+  id: string;
+  orderId: string;
+  actor: string;
+  note: string;
+  createdAt: string;
 };
 
 export type DownloadGrantClaimResult =
@@ -140,6 +201,67 @@ type ProductDownloadRow = QueryResultRow & {
   updated_at: Date | string;
 };
 
+type ProductInventoryRow = QueryResultRow & {
+  product_id: string;
+  sku: string;
+  title: string;
+  slug: string;
+  category_id: string;
+  type: Product["type"];
+  fulfillment: Product["fulfillment"];
+  short_description: string;
+  long_description: string;
+  price: string | number;
+  is_free: boolean;
+  is_active: boolean;
+  is_purchasable: boolean;
+  cover: string;
+  object_key: string | null;
+  compatibility: string[] | string;
+  featured: boolean;
+  badge: string | null;
+  status_label: string | null;
+  stock_quantity: number | null;
+  low_stock_threshold: number | null;
+  sort_order: number;
+  updated_at: Date | string;
+  sold_count?: string | number | null;
+  revenue?: string | number | null;
+  grant_count?: string | number | null;
+};
+
+type AdminOrderSummaryRow = QueryResultRow & {
+  id: string;
+  email: string;
+  status: OrderStatus;
+  fulfillment_status: FulfillmentStatus;
+  total: string | number;
+  currency: "USD";
+  payment_provider: PaymentProvider;
+  item_count: string | number | null;
+  grant_count: string | number | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type AdminAuditEventRow = QueryResultRow & {
+  id: string;
+  actor: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  details: Record<string, unknown> | string;
+  created_at: Date | string;
+};
+
+type OrderAdminNoteRow = QueryResultRow & {
+  id: string;
+  order_id: string;
+  actor: string;
+  note: string;
+  created_at: Date | string;
+};
+
 type OrderAccessTokenRow = QueryResultRow & {
   id: string;
   order_id: string;
@@ -193,6 +315,19 @@ const asIsoString = (value: Date | string | null) => {
 const toNumber = (value: string | number) =>
   typeof value === "number" ? value : Number.parseFloat(value);
 
+const toStringArray = (value: string[] | string) => {
+  if (Array.isArray(value)) {
+    return value.filter((entry) => typeof entry === "string");
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((entry): entry is string => typeof entry === "string") : [];
+  } catch {
+    return [];
+  }
+};
+
 const clampQuantity = (quantity: number) => {
   if (!Number.isFinite(quantity)) {
     return 1;
@@ -222,6 +357,89 @@ export const quoteCart = (inputItems: CartInputItem[]) => {
     }
 
     if (!product.isPurchasable) {
+      unavailableProductIds.push(productId);
+      continue;
+    }
+
+    const unitPrice = product.isFree ? 0 : product.price;
+    items.push({
+      productId,
+      title: product.title,
+      type: product.type,
+      fulfillment: product.fulfillment,
+      quantity,
+      unitPrice,
+      lineTotal: unitPrice * quantity,
+      isFree: product.isFree,
+    });
+  }
+
+  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const tax = 0;
+  const total = subtotal + tax;
+
+  const quote: CartQuote = {
+    items,
+    subtotal,
+    tax,
+    total,
+    currency: "USD",
+    hasPaidItems: items.some((item) => !item.isFree),
+    hasFreeItems: items.some((item) => item.isFree),
+  };
+
+  return { quote, missingProductIds, unavailableProductIds };
+};
+
+const getInventoryProductsByIds = async (productIds: string[]) => {
+  if (productIds.length === 0) {
+    return new Map<string, ProductInventoryRecord>();
+  }
+
+  const result = await query<ProductInventoryRow>(
+    `SELECT *
+     FROM product_inventory
+     WHERE product_id = ANY($1::text[])`,
+    [productIds],
+  );
+
+  return new Map(result.rows.map((row) => {
+    const product = rowToProductInventory(row);
+    return [product.productId, product];
+  }));
+};
+
+export const quoteCartFromInventory = async (inputItems: CartInputItem[]) => {
+  if (!hasCommerceDatabaseConfig()) {
+    return quoteCart(inputItems);
+  }
+
+  const merged = new Map<string, number>();
+
+  for (const item of inputItems) {
+    const nextQty = clampQuantity(item.quantity);
+    merged.set(item.productId, (merged.get(item.productId) ?? 0) + nextQty);
+  }
+
+  const inventory = await getInventoryProductsByIds([...merged.keys()]);
+  const missingProductIds: string[] = [];
+  const unavailableProductIds: string[] = [];
+  const items: CartQuoteItem[] = [];
+
+  for (const [productId, quantity] of merged.entries()) {
+    const product = inventory.get(productId);
+
+    if (!product) {
+      missingProductIds.push(productId);
+      continue;
+    }
+
+    if (!product.isActive || !product.isPurchasable) {
+      unavailableProductIds.push(productId);
+      continue;
+    }
+
+    if (product.stockQuantity !== null && quantity > product.stockQuantity) {
       unavailableProductIds.push(productId);
       continue;
     }
@@ -356,6 +574,67 @@ const rowToProductDownload = (row: ProductDownloadRow): ProductDownloadMetadata 
   objectKey: row.object_key,
   isActive: row.is_active,
   updatedAt: asIsoString(row.updated_at) ?? "",
+});
+
+const rowToProductInventory = (row: ProductInventoryRow): ProductInventoryRecord => ({
+  productId: row.product_id,
+  sku: row.sku,
+  title: row.title,
+  slug: row.slug,
+  categoryId: row.category_id,
+  type: row.type,
+  fulfillment: row.fulfillment,
+  shortDescription: row.short_description,
+  longDescription: row.long_description,
+  price: toNumber(row.price),
+  isFree: row.is_free,
+  isActive: row.is_active,
+  isPurchasable: row.is_purchasable,
+  cover: row.cover,
+  objectKey: row.object_key,
+  compatibility: toStringArray(row.compatibility),
+  featured: row.featured,
+  badge: row.badge,
+  statusLabel: row.status_label,
+  stockQuantity: row.stock_quantity,
+  lowStockThreshold: row.low_stock_threshold,
+  sortOrder: row.sort_order,
+  updatedAt: asIsoString(row.updated_at) ?? "",
+  soldCount: row.sold_count == null ? undefined : toNumber(row.sold_count),
+  revenue: row.revenue == null ? undefined : toNumber(row.revenue),
+  grantCount: row.grant_count == null ? undefined : toNumber(row.grant_count),
+});
+
+const rowToAdminOrderSummary = (row: AdminOrderSummaryRow): AdminOrderSummary => ({
+  id: row.id,
+  email: row.email,
+  status: row.status,
+  fulfillmentStatus: row.fulfillment_status,
+  total: toNumber(row.total),
+  currency: row.currency,
+  paymentProvider: row.payment_provider,
+  itemCount: row.item_count == null ? 0 : toNumber(row.item_count),
+  grantCount: row.grant_count == null ? 0 : toNumber(row.grant_count),
+  createdAt: asIsoString(row.created_at) ?? "",
+  updatedAt: asIsoString(row.updated_at) ?? "",
+});
+
+const rowToAdminAuditEvent = (row: AdminAuditEventRow): AdminAuditEvent => ({
+  id: row.id,
+  actor: row.actor,
+  action: row.action,
+  targetType: row.target_type,
+  targetId: row.target_id,
+  details: typeof row.details === "string" ? JSON.parse(row.details) as Record<string, unknown> : row.details,
+  createdAt: asIsoString(row.created_at) ?? "",
+});
+
+const rowToOrderAdminNote = (row: OrderAdminNoteRow): OrderAdminNote => ({
+  id: row.id,
+  orderId: row.order_id,
+  actor: row.actor,
+  note: row.note,
+  createdAt: asIsoString(row.created_at) ?? "",
 });
 
 const listGrantsByOrderId = async (orderId: string, client?: PoolClient) => {
@@ -767,6 +1046,29 @@ export const isValidEmail = (email: string) => {
 export const getProductById = (productId: string) => productMap.get(productId);
 
 export const getProductDownloadMetadata = async (productId: string) => {
+  const inventoryResult = await query<ProductInventoryRow>(
+    `SELECT *
+     FROM product_inventory
+     WHERE product_id = $1
+       AND is_active = true
+       AND object_key IS NOT NULL
+     LIMIT 1`,
+    [productId],
+  );
+
+  if (inventoryResult.rows[0]) {
+    const product = rowToProductInventory(inventoryResult.rows[0]);
+    return {
+      productId: product.productId,
+      sku: product.sku,
+      title: product.title,
+      slug: product.slug,
+      objectKey: product.objectKey ?? "",
+      isActive: product.isActive,
+      updatedAt: product.updatedAt,
+    };
+  }
+
   const result = await query<ProductDownloadRow>(
     `SELECT *
      FROM product_downloads
@@ -777,6 +1079,511 @@ export const getProductDownloadMetadata = async (productId: string) => {
   );
 
   return result.rows[0] ? rowToProductDownload(result.rows[0]) : null;
+};
+
+export const inventoryToProduct = (product: ProductInventoryRecord): Product => ({
+  id: product.productId,
+  title: product.title,
+  slug: product.slug,
+  categoryId: product.categoryId,
+  type: product.type,
+  fulfillment: product.fulfillment,
+  isPurchasable: product.isActive && product.isPurchasable,
+  shortDescription: product.shortDescription,
+  longDescription: product.longDescription,
+  isFree: product.isFree,
+  price: product.price,
+  cover: product.cover,
+  downloadKey: product.objectKey ?? undefined,
+  compatibility: product.compatibility,
+  featured: product.featured,
+  badge: product.badge ?? undefined,
+  statusLabel: product.statusLabel ?? undefined,
+});
+
+export const listStorefrontProducts = async () => {
+  if (!hasCommerceDatabaseConfig()) {
+    return products;
+  }
+
+  const result = await query<ProductInventoryRow>(
+    `SELECT *
+     FROM product_inventory
+     WHERE is_active = true
+     ORDER BY sort_order ASC, title ASC`,
+  );
+  const storefrontProducts = result.rows.map((row) => inventoryToProduct(rowToProductInventory(row)));
+
+  return storefrontProducts.length > 0 ? storefrontProducts : products;
+};
+
+export const getStorefrontProductBySlug = async (slug: string) => {
+  if (!hasCommerceDatabaseConfig()) {
+    return getProductBySlug(slug);
+  }
+
+  const result = await query<ProductInventoryRow>(
+    `SELECT *
+     FROM product_inventory
+     WHERE slug = $1
+       AND is_active = true
+     LIMIT 1`,
+    [slug],
+  );
+
+  return result.rows[0] ? inventoryToProduct(rowToProductInventory(result.rows[0])) : null;
+};
+
+export const listProductInventory = async () => {
+  const result = await query<ProductInventoryRow>(
+    `SELECT pi.*,
+            COALESCE(SUM(oi.quantity), 0) AS sold_count,
+            COALESCE(SUM(oi.line_total), 0) AS revenue,
+            COUNT(DISTINCT dg.id) AS grant_count
+     FROM product_inventory pi
+     LEFT JOIN order_items oi ON oi.product_id = pi.product_id
+     LEFT JOIN download_grants dg ON dg.product_id = pi.product_id
+     GROUP BY pi.product_id
+     ORDER BY pi.title ASC`,
+  );
+
+  return result.rows.map(rowToProductInventory);
+};
+
+export const updateProductInventory = async (params: {
+  productId: string;
+  title: string;
+  sku: string;
+  slug: string;
+  categoryId: string;
+  shortDescription: string;
+  longDescription: string;
+  price: number;
+  isActive: boolean;
+  isPurchasable: boolean;
+  isFree: boolean;
+  cover: string;
+  objectKey: string | null;
+  compatibility: string[];
+  featured: boolean;
+  badge: string | null;
+  statusLabel: string | null;
+  stockQuantity: number | null;
+  lowStockThreshold: number | null;
+  sortOrder: number;
+}) => {
+  const result = await query<ProductInventoryRow>(
+    `UPDATE product_inventory
+     SET title = $2,
+         sku = $3,
+         slug = $4,
+         category_id = $5,
+         short_description = $6,
+         long_description = $7,
+         price = $8,
+         is_active = $9,
+         is_purchasable = $10,
+         is_free = $11,
+         cover = $12,
+         object_key = $13,
+         compatibility = $14,
+         featured = $15,
+         badge = $16,
+         status_label = $17,
+         stock_quantity = $18,
+         low_stock_threshold = $19,
+         sort_order = $20,
+         updated_at = NOW()
+     WHERE product_id = $1
+     RETURNING *`,
+    [
+      params.productId,
+      params.title,
+      params.sku,
+      params.slug,
+      params.categoryId,
+      params.shortDescription,
+      params.longDescription,
+      params.price,
+      params.isActive,
+      params.isPurchasable,
+      params.isFree,
+      params.cover,
+      params.objectKey,
+      JSON.stringify(params.compatibility),
+      params.featured,
+      params.badge,
+      params.statusLabel,
+      params.stockQuantity,
+      params.lowStockThreshold,
+      params.sortOrder,
+    ],
+  );
+
+  const updated = result.rows[0] ? rowToProductInventory(result.rows[0]) : null;
+
+  if (updated?.objectKey) {
+    await query(
+      `INSERT INTO product_downloads (
+        product_id,
+        sku,
+        title,
+        slug,
+        object_key,
+        is_active,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (product_id) DO UPDATE
+      SET sku = EXCLUDED.sku,
+          title = EXCLUDED.title,
+          slug = EXCLUDED.slug,
+          object_key = EXCLUDED.object_key,
+          is_active = EXCLUDED.is_active,
+          updated_at = NOW()`,
+      [
+        updated.productId,
+        updated.sku,
+        updated.title,
+        updated.slug,
+        updated.objectKey,
+        updated.isActive,
+      ],
+    );
+  }
+
+  return updated;
+};
+
+export const createProductInventory = async (params: {
+  productId: string;
+  title: string;
+  sku: string;
+  slug: string;
+  categoryId: string;
+  type: Product["type"];
+  fulfillment: Product["fulfillment"];
+  shortDescription: string;
+  longDescription: string;
+  price: number;
+  isActive: boolean;
+  isPurchasable: boolean;
+  isFree: boolean;
+  cover: string;
+  objectKey: string | null;
+  compatibility: string[];
+  featured: boolean;
+  badge: string | null;
+  statusLabel: string | null;
+  stockQuantity: number | null;
+  lowStockThreshold: number | null;
+  sortOrder: number;
+}) => {
+  const result = await query<ProductInventoryRow>(
+    `INSERT INTO product_inventory (
+      product_id,
+      sku,
+      title,
+      slug,
+      category_id,
+      type,
+      fulfillment,
+      short_description,
+      long_description,
+      price,
+      is_free,
+      is_active,
+      is_purchasable,
+      cover,
+      object_key,
+      compatibility,
+      featured,
+      badge,
+      status_label,
+      stock_quantity,
+      low_stock_threshold,
+      sort_order,
+      updated_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW())
+    RETURNING *`,
+    [
+      params.productId,
+      params.sku,
+      params.title,
+      params.slug,
+      params.categoryId,
+      params.type,
+      params.fulfillment,
+      params.shortDescription,
+      params.longDescription,
+      params.price,
+      params.isFree,
+      params.isActive,
+      params.isPurchasable,
+      params.cover,
+      params.objectKey,
+      JSON.stringify(params.compatibility),
+      params.featured,
+      params.badge,
+      params.statusLabel,
+      params.stockQuantity,
+      params.lowStockThreshold,
+      params.sortOrder,
+    ],
+  );
+
+  const created = result.rows[0] ? rowToProductInventory(result.rows[0]) : null;
+
+  if (created?.objectKey) {
+    await query(
+      `INSERT INTO product_downloads (
+        product_id,
+        sku,
+        title,
+        slug,
+        object_key,
+        is_active,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (product_id) DO UPDATE
+      SET sku = EXCLUDED.sku,
+          title = EXCLUDED.title,
+          slug = EXCLUDED.slug,
+          object_key = EXCLUDED.object_key,
+          is_active = EXCLUDED.is_active,
+          updated_at = NOW()`,
+      [
+        created.productId,
+        created.sku,
+        created.title,
+        created.slug,
+        created.objectKey,
+        created.isActive,
+      ],
+    );
+  }
+
+  return created;
+};
+
+export const deleteProductInventory = async (productId: string) => {
+  const usage = await query<{ order_count: string | number; grant_count: string | number }>(
+    `SELECT
+       (SELECT COUNT(*) FROM order_items WHERE product_id = $1) AS order_count,
+       (SELECT COUNT(*) FROM download_grants WHERE product_id = $1) AS grant_count`,
+    [productId],
+  );
+  const orderCount = toNumber(usage.rows[0]?.order_count ?? 0);
+  const grantCount = toNumber(usage.rows[0]?.grant_count ?? 0);
+
+  if (orderCount > 0 || grantCount > 0) {
+    const result = await query<ProductInventoryRow>(
+      `UPDATE product_inventory
+       SET is_active = false,
+           is_purchasable = false,
+           updated_at = NOW()
+       WHERE product_id = $1
+       RETURNING *`,
+      [productId],
+    );
+
+    await query(
+      `UPDATE product_downloads
+       SET is_active = false,
+           updated_at = NOW()
+       WHERE product_id = $1`,
+      [productId],
+    );
+
+    return {
+      mode: "archived" as const,
+      product: result.rows[0] ? rowToProductInventory(result.rows[0]) : null,
+    };
+  }
+
+  await query("DELETE FROM product_downloads WHERE product_id = $1", [productId]);
+  const result = await query<ProductInventoryRow>(
+    `DELETE FROM product_inventory
+     WHERE product_id = $1
+     RETURNING *`,
+    [productId],
+  );
+
+  return {
+    mode: "deleted" as const,
+    product: result.rows[0] ? rowToProductInventory(result.rows[0]) : null,
+  };
+};
+
+export const listAdminOrders = async (limit = 50) => {
+  const result = await query<AdminOrderSummaryRow>(
+    `SELECT o.*,
+            COALESCE(SUM(oi.quantity), 0) AS item_count,
+            COUNT(DISTINCT dg.id) AS grant_count
+     FROM orders o
+     LEFT JOIN order_items oi ON oi.order_id = o.id
+     LEFT JOIN download_grants dg ON dg.order_id = o.id
+     GROUP BY o.id
+     ORDER BY o.created_at DESC
+     LIMIT $1`,
+    [limit],
+  );
+
+  return result.rows.map(rowToAdminOrderSummary);
+};
+
+export const listOrderDownloadGrants = async (orderId: string) => listGrantsByOrderId(orderId);
+
+export const createAdminAuditEvent = async (params: {
+  actor: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details?: Record<string, unknown>;
+}) => {
+  const result = await query<AdminAuditEventRow>(
+    `INSERT INTO admin_audit_events (
+      id,
+      actor,
+      action,
+      target_type,
+      target_id,
+      details,
+      created_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    RETURNING *`,
+    [
+      `aud_${randomUUID()}`,
+      params.actor,
+      params.action,
+      params.targetType,
+      params.targetId,
+      JSON.stringify(params.details ?? {}),
+    ],
+  );
+
+  return rowToAdminAuditEvent(result.rows[0]);
+};
+
+export const listAdminAuditEvents = async (targetType: string, targetId: string) => {
+  const result = await query<AdminAuditEventRow>(
+    `SELECT *
+     FROM admin_audit_events
+     WHERE target_type = $1
+       AND target_id = $2
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [targetType, targetId],
+  );
+
+  return result.rows.map(rowToAdminAuditEvent);
+};
+
+export const updateOrderAdminStatus = async (params: {
+  orderId: string;
+  status: OrderStatus;
+  fulfillmentStatus: FulfillmentStatus;
+  failureReason: string | null;
+  actor: string;
+}) => {
+  const existing = await getOrderById(params.orderId);
+  if (!existing) {
+    return null;
+  }
+
+  const result = await query<OrderRow>(
+    `UPDATE orders
+     SET status = $2,
+         fulfillment_status = $3,
+         failure_reason = $4,
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [params.orderId, params.status, params.fulfillmentStatus, params.failureReason],
+  );
+
+  await createAdminAuditEvent({
+    actor: params.actor,
+    action: "order_status_updated",
+    targetType: "order",
+    targetId: params.orderId,
+    details: {
+      previousStatus: existing.status,
+      nextStatus: params.status,
+      previousFulfillmentStatus: existing.fulfillmentStatus,
+      nextFulfillmentStatus: params.fulfillmentStatus,
+    },
+  });
+
+  return result.rows[0] ? rowToOrder(result.rows[0]) : null;
+};
+
+export const addOrderAdminNote = async (params: {
+  orderId: string;
+  actor: string;
+  note: string;
+}) => {
+  const result = await query<OrderAdminNoteRow>(
+    `INSERT INTO order_admin_notes (
+      id,
+      order_id,
+      actor,
+      note,
+      created_at
+    ) VALUES ($1, $2, $3, $4, NOW())
+    RETURNING *`,
+    [`note_${randomUUID()}`, params.orderId, params.actor, params.note],
+  );
+
+  await createAdminAuditEvent({
+    actor: params.actor,
+    action: "order_note_added",
+    targetType: "order",
+    targetId: params.orderId,
+    details: { noteId: result.rows[0].id },
+  });
+
+  return rowToOrderAdminNote(result.rows[0]);
+};
+
+export const listOrderAdminNotes = async (orderId: string) => {
+  const result = await query<OrderAdminNoteRow>(
+    `SELECT *
+     FROM order_admin_notes
+     WHERE order_id = $1
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [orderId],
+  );
+
+  return result.rows.map(rowToOrderAdminNote);
+};
+
+export const setDownloadGrantRevoked = async (params: {
+  grantId: string;
+  revoked: boolean;
+  actor: string;
+}) => {
+  const result = await query<DownloadGrantRow>(
+    `UPDATE download_grants
+     SET revoked_at = CASE WHEN $2::boolean THEN NOW() ELSE NULL END
+     WHERE id = $1
+     RETURNING *`,
+    [params.grantId, params.revoked],
+  );
+
+  const grant = result.rows[0] ? rowToGrant(result.rows[0]) : null;
+
+  if (grant) {
+    await createAdminAuditEvent({
+      actor: params.actor,
+      action: params.revoked ? "download_grant_revoked" : "download_grant_restored",
+      targetType: "order",
+      targetId: grant.orderId,
+      details: { grantId: grant.id, productId: grant.productId },
+    });
+  }
+
+  return grant;
 };
 
 export const getOrderById = async (orderId: string) => {

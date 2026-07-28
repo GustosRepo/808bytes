@@ -2,13 +2,14 @@ import { notFound } from "next/navigation";
 import AddToCartCta from "@/components/add-to-cart-cta";
 import { DawButtonLink, DawMenuBar } from "@/components/daw-chrome";
 import ProductCover from "@/components/product-cover";
-import { categories, getProductBySlug } from "@/lib/store-data";
+import { getStorefrontProductBySlug } from "@/lib/commerce";
+import { categories, type Product } from "@/lib/store-data";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const formatPrice = (product: NonNullable<ReturnType<typeof getProductBySlug>>) => {
+const formatPrice = (product: Product) => {
   if (!product.isPurchasable) {
     return product.statusLabel ?? "Preview only";
   }
@@ -18,7 +19,7 @@ const formatPrice = (product: NonNullable<ReturnType<typeof getProductBySlug>>) 
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getStorefrontProductBySlug(slug);
 
   if (!product) {
     notFound();

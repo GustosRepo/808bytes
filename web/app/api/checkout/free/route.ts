@@ -6,7 +6,7 @@ import {
   hasCommerceDatabaseConfig,
   isValidEmail,
   normalizeAppOrigin,
-  quoteCart,
+  quoteCartFromInventory,
   type CartInputItem,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "items must be a non-empty array." }, { status: 400 });
   }
 
-  const { quote, missingProductIds, unavailableProductIds } = quoteCart(items);
+  const { quote, missingProductIds, unavailableProductIds } = await quoteCartFromInventory(items);
 
   if (missingProductIds.length > 0) {
     return NextResponse.json(

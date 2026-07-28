@@ -1,13 +1,10 @@
-import { products } from "@/lib/store-data";
-
 export type CartItem = {
   productId: string;
   quantity: number;
 };
 
-export const CART_STORAGE_KEY = "808bytes_cart_v1";
+export const CART_STORAGE_KEY = "808bytes_cart_v2";
 export const CART_CHANGE_EVENT = "808bytes_cart_change";
-const validProductIds = new Set(products.map((product) => product.id));
 
 const notifyCartChanged = () => {
   if (typeof window === "undefined") {
@@ -19,7 +16,7 @@ const notifyCartChanged = () => {
 
 const normalizeItems = (items: CartItem[]) =>
   items
-    .filter((entry) => typeof entry?.productId === "string" && validProductIds.has(entry.productId))
+    .filter((entry) => typeof entry?.productId === "string")
     .map((entry) => ({
       productId: entry.productId,
       quantity: Math.min(99, Math.max(1, Math.floor(entry.quantity || 1))),

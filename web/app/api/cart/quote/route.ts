@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { quoteCart, type CartInputItem } from "@/lib/commerce";
+import { quoteCartFromInventory, type CartInputItem } from "@/lib/commerce";
 
 type QuoteRequestBody = {
   items?: CartInputItem[];
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "items must be a non-empty array." }, { status: 400 });
   }
 
-  const { quote, missingProductIds, unavailableProductIds } = quoteCart(items);
+  const { quote, missingProductIds, unavailableProductIds } = await quoteCartFromInventory(items);
 
   if (missingProductIds.length > 0) {
     return NextResponse.json(
