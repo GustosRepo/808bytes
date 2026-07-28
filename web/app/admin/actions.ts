@@ -79,7 +79,7 @@ export const loginAdmin = async (formData: FormData) => {
     headers: headerStore,
     scope: "admin_login",
     identifier: email || undefined,
-    limit: 8,
+    limit: process.env.NODE_ENV === "production" ? 8 : 50,
     windowSeconds: 900,
   });
 

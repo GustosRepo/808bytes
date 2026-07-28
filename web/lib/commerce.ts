@@ -1547,18 +1547,18 @@ export const consumeApiRateLimit = async (params: {
      ) VALUES ($1, $2, NOW(), 1, NOW())
      ON CONFLICT (key_hash, scope) DO UPDATE
      SET window_start = CASE
-           WHEN api_rate_limits.window_start <= NOW() - ($4::integer * INTERVAL '1 second')
+           WHEN api_rate_limits.window_start <= NOW() - ($3::integer * INTERVAL '1 second')
            THEN NOW()
            ELSE api_rate_limits.window_start
          END,
          count = CASE
-           WHEN api_rate_limits.window_start <= NOW() - ($4::integer * INTERVAL '1 second')
+           WHEN api_rate_limits.window_start <= NOW() - ($3::integer * INTERVAL '1 second')
            THEN 1
            ELSE api_rate_limits.count + 1
          END,
          updated_at = NOW()
      RETURNING count, window_start`,
-    [params.keyHash, params.scope, params.limit, params.windowSeconds],
+    [params.keyHash, params.scope, params.windowSeconds],
   );
 
   const row = result.rows[0];
