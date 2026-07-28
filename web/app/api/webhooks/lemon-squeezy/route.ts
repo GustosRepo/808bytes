@@ -4,6 +4,7 @@ import {
   finalizeOrderAsPaid,
   hasCommerceDatabaseConfig,
   issueOrderAccessToken,
+  normalizeAppOrigin,
 } from "@/lib/commerce";
 import {
   getLemonSqueezyEventName,
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unable to finalize order." }, { status: 500 });
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = normalizeAppOrigin(new URL(request.url).origin);
   const downloads = buildDownloadUrls({ origin, grants: result.createdGrants });
   const accessToken = await issueOrderAccessToken(result.order.id);
   const orderAccessUrl = accessToken

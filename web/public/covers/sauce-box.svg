@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" role="img" aria-labelledby="title desc">
+  <title id="title">Sauce Box cover art</title>
+  <desc id="desc">A boxed bundle cover for the 808bytes Sauce Box suite.</desc>
+  <rect width="800" height="700" fill="#f4ebdc"/>
+  <rect x="40" y="40" width="720" height="620" fill="#151515"/>
+  <rect x="96" y="112" width="608" height="456" fill="#78dcca"/>
+  <path d="M156 180h488v320H156z" fill="#f8f0df"/>
+  <path d="M188 218h424v52H188z" fill="#151515"/>
+  <path d="M188 410h424v52H188z" fill="#151515"/>
+  <g fill="#e94f3d">
+    <path d="M236 328c18-58 62-64 90 0 28 64 74 58 90 0 14 88-34 134-90 134s-104-46-90-134z"/>
+    <path d="M418 316c14-46 50-50 72 0 22 50 58 46 72 0 10 70-28 108-72 108s-82-38-72-108z"/>
+  </g>
+  <text x="400" y="620" fill="#f8f0df" font-family="Arial, sans-serif" font-size="60" font-weight="900" text-anchor="middle">SAUCE BOX</text>
+</svg>

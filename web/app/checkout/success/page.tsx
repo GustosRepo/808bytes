@@ -17,6 +17,12 @@ type OrderLookup = {
   items: Array<{ productId: string; title: string; quantity: number; lineTotal: number }>;
 };
 
+type DownloadLink = {
+  productId: string;
+  expiresAt: string;
+  url: string;
+};
+
 const formatUsd = (amount: number) => `$${amount.toFixed(2)}`;
 
 function CheckoutSuccessContent() {
@@ -31,6 +37,7 @@ function CheckoutSuccessContent() {
   const [error, setError] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([]);
 
   useEffect(() => {
     if (orderId || sessionId) {
@@ -89,14 +96,15 @@ function CheckoutSuccessContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: order.email, orderToken }),
       });
-      const payload = (await response.json()) as { error?: string; downloads?: Array<{ url: string }> };
+      const payload = (await response.json()) as { error?: string; downloads?: DownloadLink[] };
 
       if (!response.ok) {
         setResendMessage(payload.error ?? "Unable to resend receipt.");
         return;
       }
 
-      setResendMessage(`Receipt resent. ${payload.downloads?.length ?? 0} fresh download link(s) generated.`);
+      setDownloadLinks(payload.downloads ?? []);
+      setResendMessage(`${payload.downloads?.length ?? 0} fresh download link(s) generated.`);
     } catch {
       setResendMessage("Network error while resending receipt.");
     } finally {
@@ -182,7 +190,7 @@ function CheckoutSuccessContent() {
               onClick={resendReceipt}
               type="button"
             >
-              {isResending ? "Sending..." : "Resend receipt"}
+              {isResending ? "Generating..." : "Get download links"}
             </button>
           ) : null}
           <Link className="border border-[#151515] px-4 py-2 text-sm font-bold uppercase" href="/">
@@ -190,6 +198,23 @@ function CheckoutSuccessContent() {
           </Link>
         </div>
         {resendMessage ? <p className="mt-3 text-sm font-bold text-[#5f5d56]">{resendMessage}</p> : null}
+        {downloadLinks.length > 0 ? (
+          <div className="mt-4 grid gap-2 border border-[#d8d0c0] bg-[#fbfaf6] p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8a8376]">Downloads</p>
+            {downloadLinks.map((download) => (
+              <a
+                className="break-all border border-[#151515] bg-white px-3 py-2 text-sm font-bold text-[#151515] transition hover:bg-[#f2efe7]"
+                href={download.url}
+                key={`${download.productId}-${download.url}`}
+              >
+                {download.productId} download
+              </a>
+            ))}
+            <p className="text-[0.7rem] font-semibold uppercase text-[#6a675f]">
+              Links expire on {new Date(downloadLinks[0].expiresAt).toLocaleString()}.
+            </p>
+          </div>
+        ) : null}
       </section>
     </main>
   );

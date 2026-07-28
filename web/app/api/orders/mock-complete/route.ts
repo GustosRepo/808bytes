@@ -3,6 +3,7 @@ import {
   buildDownloadUrls,
   finalizeOrderAsPaid,
   hasCommerceDatabaseConfig,
+  normalizeAppOrigin,
   verifyOrderAccessToken,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
@@ -46,10 +47,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = normalizeAppOrigin(new URL(request.url).origin);
   const downloads = buildDownloadUrls({ origin, grants: finalized.createdGrants });
   const orderAccessUrl = `${origin}/checkout/success?order_id=${encodeURIComponent(finalized.order.id)}&order_token=${body.orderToken}`;
-  const email = await sendReceiptEmail({ order: finalized.order, downloads, orderAccessUrl });
+  const email = await sendReceiptEmail({ order: finalized.order, downloads, orderAccessUrl }).catch((error) => ({
+    mode: "error" as const,
+    delivered: false,
+    providerId: null,
+    error: error instanceof Error ? error.message : "Receipt email delivery failed.",
+  }));
 
   return NextResponse.json({
     orderId: finalized.order.id,

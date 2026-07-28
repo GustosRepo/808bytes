@@ -8,6 +8,14 @@ type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+const formatPrice = (product: NonNullable<ReturnType<typeof getProductBySlug>>) => {
+  if (!product.isPurchasable) {
+    return product.statusLabel ?? "Preview only";
+  }
+
+  return product.isFree ? "FREE" : `$${product.price}`;
+};
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const product = getProductBySlug(slug);
@@ -38,7 +46,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Insert 08 / {category?.name ?? "Catalog"}
             </span>
             <span className="ml-auto border border-[#4a4c50] bg-[#1b1d20] px-3 py-1 text-[0.68rem] font-semibold text-[var(--accent-amber)]">
-              {product.isFree ? "FREE" : `$${product.price}`}
+              {formatPrice(product)}
             </span>
             <span className="border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-1 text-[0.68rem] font-bold uppercase text-[var(--commerce-text)]">
               {!product.isPurchasable ? (product.statusLabel ?? "Preview only") : product.isFree ? "Free download" : "Ready to buy"}
@@ -94,7 +102,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <span className="text-[var(--muted)]">Category</span>
                   <span>{category?.name ?? "Catalog"}</span>
                   <span className="text-[var(--muted)]">Price</span>
-                  <span>{product.isFree ? "FREE" : `$${product.price}`}</span>
+                  <span>{formatPrice(product)}</span>
                   <span className="text-[var(--muted)]">Format</span>
                   <span>{product.compatibility.join(" / ")}</span>
                 </div>
@@ -115,7 +123,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
                   {product.isPurchasable
                     ? "Opens checkout with this item ready for delivery."
-                    : "Preview only until shipping and fulfillment are ready."}
+                    : "Preview only until pricing and checkout are ready."}
                 </p>
               </div>
             </div>

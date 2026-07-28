@@ -45,6 +45,23 @@ export type DownloadGrant = {
   createdAt: string;
 };
 
+export type ProductDownloadMetadata = {
+  productId: string;
+  sku: string;
+  title: string;
+  slug: string;
+  objectKey: string;
+  isActive: boolean;
+  updatedAt: string;
+};
+
+export type DownloadGrantClaimResult =
+  | { status: "claimed"; grant: DownloadGrant }
+  | { status: "invalid" }
+  | { status: "revoked"; grant: DownloadGrant }
+  | { status: "expired"; grant: DownloadGrant }
+  | { status: "limit_reached"; grant: DownloadGrant };
+
 export type OrderAccessToken = {
   id: string;
   orderId: string;
@@ -111,6 +128,16 @@ type DownloadGrantRow = QueryResultRow & {
   download_count: number;
   revoked_at: Date | string | null;
   created_at: Date | string;
+};
+
+type ProductDownloadRow = QueryResultRow & {
+  product_id: string;
+  sku: string;
+  title: string;
+  slug: string;
+  object_key: string;
+  is_active: boolean;
+  updated_at: Date | string;
 };
 
 type OrderAccessTokenRow = QueryResultRow & {
@@ -319,6 +346,16 @@ const rowToGrant = (row: DownloadGrantRow): DownloadGrant => ({
   downloadCount: row.download_count,
   revokedAt: asIsoString(row.revoked_at),
   createdAt: asIsoString(row.created_at) ?? "",
+});
+
+const rowToProductDownload = (row: ProductDownloadRow): ProductDownloadMetadata => ({
+  productId: row.product_id,
+  sku: row.sku,
+  title: row.title,
+  slug: row.slug,
+  objectKey: row.object_key,
+  isActive: row.is_active,
+  updatedAt: asIsoString(row.updated_at) ?? "",
 });
 
 const listGrantsByOrderId = async (orderId: string, client?: PoolClient) => {
@@ -695,15 +732,30 @@ export const createFreshDownloadGrantsForOrder = async (orderId: string) => {
   }
 };
 
+export const normalizeAppOrigin = (origin: string) => {
+  const parsed = new URL(origin);
+  const isLocalhost =
+    parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1" || parsed.hostname === "[::1]";
+
+  if (isLocalhost && parsed.protocol === "https:") {
+    parsed.protocol = "http:";
+  }
+
+  return parsed.origin;
+};
+
 export const buildDownloadUrls = (params: {
   origin: string;
   grants: Array<{ token: string; grant: DownloadGrant }>;
-}) =>
-  params.grants.map((entry) => ({
+}) => {
+  const origin = normalizeAppOrigin(params.origin);
+
+  return params.grants.map((entry) => ({
     productId: entry.grant.productId,
     expiresAt: entry.grant.expiresAt,
-    url: `${params.origin}/api/download/${entry.token}`,
+    url: `${origin}/api/download/${entry.token}`,
   }));
+};
 
 export const isValidEmail = (email: string) => {
   const normalized = email.trim().toLowerCase();
@@ -713,6 +765,19 @@ export const isValidEmail = (email: string) => {
 };
 
 export const getProductById = (productId: string) => productMap.get(productId);
+
+export const getProductDownloadMetadata = async (productId: string) => {
+  const result = await query<ProductDownloadRow>(
+    `SELECT *
+     FROM product_downloads
+     WHERE product_id = $1
+       AND is_active = true
+     LIMIT 1`,
+    [productId],
+  );
+
+  return result.rows[0] ? rowToProductDownload(result.rows[0]) : null;
+};
 
 export const getOrderById = async (orderId: string) => {
   const result = await query<OrderRow>(
@@ -739,14 +804,36 @@ export const findGrantByToken = async (rawToken: string) => {
   return result.rows[0] ? rowToGrant(result.rows[0]) : null;
 };
 
-export const incrementGrantDownload = async (grantId: string) => {
-  const result = await query<DownloadGrantRow>(
+export const claimGrantDownload = async (rawToken: string): Promise<DownloadGrantClaimResult> => {
+  const tokenHash = hashToken(rawToken);
+  const updateResult = await query<DownloadGrantRow>(
     `UPDATE download_grants
      SET download_count = download_count + 1
-     WHERE id = $1
+     WHERE token_hash = $1
+       AND revoked_at IS NULL
+       AND expires_at >= NOW()
+       AND download_count < max_downloads
      RETURNING *`,
-    [grantId],
+    [tokenHash],
   );
 
-  return result.rows[0] ? rowToGrant(result.rows[0]) : null;
+  if (updateResult.rows[0]) {
+    return { status: "claimed", grant: rowToGrant(updateResult.rows[0]) };
+  }
+
+  const grant = await findGrantByToken(rawToken);
+
+  if (!grant) {
+    return { status: "invalid" };
+  }
+
+  if (grant.revokedAt) {
+    return { status: "revoked", grant };
+  }
+
+  if (Date.now() > Date.parse(grant.expiresAt)) {
+    return { status: "expired", grant };
+  }
+
+  return { status: "limit_reached", grant };
 };

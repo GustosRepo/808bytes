@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" role="img" aria-labelledby="title desc">
+  <title id="title">Sauce packet cover art</title>
+  <desc id="desc">A bold sauce packet inspired cover for 808bytes products.</desc>
+  <rect width="800" height="700" fill="#f7efe1"/>
+  <rect x="38" y="38" width="724" height="624" fill="#151515"/>
+  <rect x="72" y="72" width="656" height="556" fill="#e94f3d"/>
+  <path d="M124 130h552v440H124z" fill="#f8f0df"/>
+  <path d="M154 160h492v70H154z" fill="#151515"/>
+  <path d="M154 470h492v70H154z" fill="#151515"/>
+  <path d="M218 280c42-82 114-82 146 0 32 82 104 82 146 0 20 126-52 204-146 204S198 406 218 280z" fill="#e94f3d"/>
+  <path d="M260 286c32-46 76-44 102 2 26 46 72 44 104-2 0 86-44 138-104 138s-102-52-102-138z" fill="#151515" opacity=".9"/>
+  <g fill="#f8f0df">
+    <rect x="176" y="184" width="42" height="20"/>
+    <rect x="236" y="184" width="42" height="20"/>
+    <rect x="296" y="184" width="42" height="20"/>
+    <rect x="356" y="184" width="42" height="20"/>
+    <rect x="416" y="184" width="42" height="20"/>
+    <rect x="476" y="184" width="42" height="20"/>
+    <rect x="536" y="184" width="42" height="20"/>
+    <rect x="596" y="184" width="28" height="20"/>
+  </g>
+  <text x="400" y="604" fill="#151515" font-family="Arial, sans-serif" font-size="54" font-weight="900" text-anchor="middle">808BYTES</text>
+</svg>

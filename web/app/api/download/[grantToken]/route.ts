@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import {
-  createSignedProductDownloadUrl,
+  createPresignedDownloadUrl,
   hasDownloadStorageConfig,
 } from "@/lib/download-storage";
 import {
+  claimGrantDownload,
   findGrantByToken,
   getOrderById,
-  getProductById,
+  getProductDownloadMetadata,
   hasCommerceDatabaseConfig,
-  incrementGrantDownload,
 } from "@/lib/commerce";
+
+export const runtime = "nodejs";
 
 type RouteParams = {
   params: Promise<{
@@ -44,18 +46,11 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Download limit reached for this token." }, { status: 429 });
   }
 
-  const product = getProductById(grant.productId);
+  const productDownload = await getProductDownloadMetadata(grant.productId);
   const order = await getOrderById(grant.orderId);
 
-  if (!product) {
+  if (!productDownload) {
     return NextResponse.json({ error: "Download product no longer exists." }, { status: 404 });
-  }
-
-  if (!product.downloadKey) {
-    return NextResponse.json(
-      { error: "Download file is not configured for this product." },
-      { status: 501 },
-    );
   }
 
   if (!hasDownloadStorageConfig()) {
@@ -68,10 +63,34 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
   }
 
-  const signedUrl = await createSignedProductDownloadUrl(product);
-  const updatedGrant = await incrementGrantDownload(grant.id);
-  if (!updatedGrant) {
-    return NextResponse.json({ error: "Unable to register download." }, { status: 500 });
+  let signedUrl: string;
+  try {
+    signedUrl = await createPresignedDownloadUrl(
+      productDownload.objectKey,
+      `${productDownload.slug}.zip`,
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "Download file is not configured correctly." },
+      { status: 501 },
+    );
+  }
+
+  const claim = await claimGrantDownload(grantToken);
+  if (claim.status === "invalid") {
+    return NextResponse.json({ error: "Download token is invalid." }, { status: 404 });
+  }
+
+  if (claim.status === "revoked") {
+    return NextResponse.json({ error: "Download token has been revoked." }, { status: 403 });
+  }
+
+  if (claim.status === "expired") {
+    return NextResponse.json({ error: "Download token has expired." }, { status: 410 });
+  }
+
+  if (claim.status === "limit_reached") {
+    return NextResponse.json({ error: "Download limit reached for this token." }, { status: 429 });
   }
 
   if (new URL(request.url).searchParams.get("format") === "json") {
@@ -79,12 +98,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       signedUrl,
       orderId: order?.id ?? null,
       product: {
-        id: product.id,
-        title: product.title,
-        slug: product.slug,
+        id: productDownload.productId,
+        title: productDownload.title,
+        slug: productDownload.slug,
       },
-      expiresAt: updatedGrant.expiresAt,
-      remainingDownloads: Math.max(0, updatedGrant.maxDownloads - updatedGrant.downloadCount),
+      expiresAt: claim.grant.expiresAt,
+      remainingDownloads: Math.max(0, claim.grant.maxDownloads - claim.grant.downloadCount),
       requestedAt: new Date().toISOString(),
     });
   }

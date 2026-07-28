@@ -4,6 +4,7 @@ import {
   createFreshDownloadGrantsForOrder,
   hasCommerceDatabaseConfig,
   isValidEmail,
+  normalizeAppOrigin,
   verifyOrderAccessToken,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
@@ -61,10 +62,15 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Only paid orders can receive download links." }, { status: 409 });
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = normalizeAppOrigin(new URL(request.url).origin);
   const downloads = buildDownloadUrls({ origin, grants: result.createdGrants });
   const orderAccessUrl = `${origin}/checkout/success?order_id=${encodeURIComponent(result.order.id)}&order_token=${body.orderToken}`;
-  const emailResult = await sendReceiptEmail({ order: result.order, downloads, orderAccessUrl });
+  const emailResult = await sendReceiptEmail({ order: result.order, downloads, orderAccessUrl }).catch((error) => ({
+    mode: "error" as const,
+    delivered: false,
+    providerId: null,
+    error: error instanceof Error ? error.message : "Receipt email delivery failed.",
+  }));
 
   return NextResponse.json({
     orderId: result.order.id,

@@ -4,6 +4,7 @@ import {
   createOrder,
   hasCommerceDatabaseConfig,
   isValidEmail,
+  normalizeAppOrigin,
   quoteCart,
   type CartInputItem,
 } from "@/lib/commerce";
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const origin = new URL(request.url).origin;
+  const origin = normalizeAppOrigin(new URL(request.url).origin);
   const cancelUrl = body.cancelUrl ?? `${origin}/checkout/cancel`;
 
   if (!hasCommerceDatabaseConfig()) {

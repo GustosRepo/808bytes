@@ -159,7 +159,13 @@ const applyMacroSettings = (engine: AudioEngine, macros: MacroValues, smoothAt?:
   glueCompressor.release.setTargetAtTime(0.1 + glueAmount * 0.22, now, 0.03);
 };
 
-const formatPrice = (product: Product) => (product.isFree ? "Free" : `$${product.price}`);
+const formatPrice = (product: Product) => {
+  if (!product.isPurchasable) {
+    return product.statusLabel ?? "Preview only";
+  }
+
+  return product.isFree ? "Free" : `$${product.price}`;
+};
 
 export default function Home() {
   const router = useRouter();
