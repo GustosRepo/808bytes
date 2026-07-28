@@ -10,6 +10,7 @@ import {
   getProductDownloadMetadata,
   hasCommerceDatabaseConfig,
 } from "@/lib/commerce";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,27 @@ type RouteParams = {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const { grantToken } = await params;
+  const ipRateLimited = await checkRateLimit({
+    request,
+    scope: "download_ip",
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (ipRateLimited) {
+    return ipRateLimited;
+  }
+
+  const tokenRateLimited = await checkRateLimit({
+    request,
+    scope: "download_token",
+    identifier: grantToken,
+    limit: 12,
+    windowSeconds: 300,
+  });
+  if (tokenRateLimited) {
+    return tokenRateLimited;
+  }
+
   if (!hasCommerceDatabaseConfig()) {
     return NextResponse.json(
       { error: "Postgres is not configured. Set DATABASE_URL or POSTGRES_URL." },

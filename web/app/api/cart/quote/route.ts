@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { quoteCartFromInventory, type CartInputItem } from "@/lib/commerce";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type QuoteRequestBody = {
   items?: CartInputItem[];
 };
 
 export async function POST(request: Request) {
+  const rateLimited = await checkRateLimit({
+    request,
+    scope: "cart_quote",
+    limit: 120,
+    windowSeconds: 60,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
   let body: QuoteRequestBody;
 
   try {

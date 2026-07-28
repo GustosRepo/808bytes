@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import MockCheckoutClient from "@/components/mock-checkout-client";
+import { isMockCheckoutEnabled } from "@/lib/runtime-config";
 
 export default function MockCheckoutPage() {
-  if (process.env.COMMERCE_MOCK_CHECKOUT !== "true") {
+  if (!isMockCheckoutEnabled()) {
     notFound();
   }
 

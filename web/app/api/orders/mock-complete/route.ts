@@ -7,6 +7,8 @@ import {
   verifyOrderAccessToken,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { isMockCheckoutEnabled } from "@/lib/runtime-config";
 
 type MockCompleteBody = {
   orderId?: string;
@@ -14,8 +16,18 @@ type MockCompleteBody = {
 };
 
 export async function POST(request: Request) {
-  if (process.env.COMMERCE_MOCK_CHECKOUT !== "true") {
+  if (!isMockCheckoutEnabled()) {
     return NextResponse.json({ error: "Mock checkout is disabled." }, { status: 404 });
+  }
+
+  const rateLimited = await checkRateLimit({
+    request,
+    scope: "mock_complete",
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (rateLimited) {
+    return rateLimited;
   }
 
   let body: MockCompleteBody;

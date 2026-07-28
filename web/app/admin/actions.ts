@@ -18,12 +18,12 @@ import {
 } from "@/lib/commerce";
 import {
   canUseDevAdminBypass,
-  clearAdminCookie,
   requireAdmin,
-  setAdminCookie,
-  verifyAdminToken,
+  signInAdmin,
+  signOutAdmin,
 } from "@/lib/admin-auth";
 import { validateDownloadObjectKey } from "@/lib/download-storage";
+import { getRateLimitStatus } from "@/lib/rate-limit";
 
 const getString = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const getBoolean = (formData: FormData, key: string) => formData.get(key) === "on";
@@ -66,25 +66,37 @@ const getActionOrigin = async () => {
   return normalizeAppOrigin(`${protocol}://${host}`);
 };
 
-const adminActor = "admin";
-
 export const loginAdmin = async (formData: FormData) => {
-  const token = getString(formData, "token");
+  const email = getString(formData, "email");
+  const password = getString(formData, "password");
 
   if (canUseDevAdminBypass()) {
     redirect("/admin");
   }
 
-  if (!verifyAdminToken(token)) {
-    redirect("/admin/login?error=1");
+  const headerStore = await headers();
+  const loginLimit = await getRateLimitStatus({
+    headers: headerStore,
+    scope: "admin_login",
+    identifier: email || undefined,
+    limit: 8,
+    windowSeconds: 900,
+  });
+
+  if (!loginLimit || !loginLimit.allowed) {
+    redirect("/admin/login?error=rate_limited");
   }
 
-  await setAdminCookie(token);
+  const result = await signInAdmin(email, password);
+  if (!result.ok) {
+    redirect(`/admin/login?error=${result.reason}`);
+  }
+
   redirect("/admin");
 };
 
 export const logoutAdmin = async () => {
-  await clearAdminCookie();
+  await signOutAdmin();
   redirect("/admin/login");
 };
 
@@ -198,7 +210,7 @@ export const generateAdminOrderLinksAction = async (formData: FormData) => {
 };
 
 export const updateAdminOrderStatusAction = async (formData: FormData) => {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const orderId = getString(formData, "orderId");
   const status = getString(formData, "status") as OrderStatus;
@@ -210,7 +222,7 @@ export const updateAdminOrderStatusAction = async (formData: FormData) => {
     status,
     fulfillmentStatus,
     failureReason,
-    actor: adminActor,
+    actor: admin.email,
   });
 
   revalidatePath(`/admin/orders/${orderId}`);
@@ -218,7 +230,7 @@ export const updateAdminOrderStatusAction = async (formData: FormData) => {
 };
 
 export const addAdminOrderNoteAction = async (formData: FormData) => {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const orderId = getString(formData, "orderId");
   const note = getString(formData, "note");
@@ -229,7 +241,7 @@ export const addAdminOrderNoteAction = async (formData: FormData) => {
 
   await addOrderAdminNote({
     orderId,
-    actor: adminActor,
+    actor: admin.email,
     note,
   });
 
@@ -238,7 +250,7 @@ export const addAdminOrderNoteAction = async (formData: FormData) => {
 };
 
 export const setAdminGrantRevokedAction = async (formData: FormData) => {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const orderId = getString(formData, "orderId");
   const grantId = getString(formData, "grantId");
@@ -247,7 +259,7 @@ export const setAdminGrantRevokedAction = async (formData: FormData) => {
   await setDownloadGrantRevoked({
     grantId,
     revoked,
-    actor: adminActor,
+    actor: admin.email,
   });
 
   revalidatePath(`/admin/orders/${orderId}`);

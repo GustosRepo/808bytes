@@ -1,4 +1,5 @@
 import type { OrderRecord } from "@/lib/commerce";
+import { isReceiptEmailMockEnabled } from "@/lib/runtime-config";
 
 type ReceiptDownload = {
   productId: string;
@@ -15,7 +16,7 @@ type SendReceiptEmailParams = {
 const getReceiptEmailConfig = () => ({
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.RECEIPT_EMAIL_FROM,
-  mock: process.env.RECEIPT_EMAIL_MOCK === "true",
+  mock: isReceiptEmailMockEnabled(),
 });
 
 export const hasReceiptEmailConfig = () => {

@@ -108,12 +108,30 @@ export type AdminAuditEvent = {
   createdAt: string;
 };
 
+export type AdminUserRole = "owner" | "admin";
+
+export type AdminUserRecord = {
+  id: string;
+  email: string;
+  role: AdminUserRole;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type OrderAdminNote = {
   id: string;
   orderId: string;
   actor: string;
   note: string;
   createdAt: string;
+};
+
+export type ApiRateLimitResult = {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: string;
 };
 
 export type DownloadGrantClaimResult =
@@ -252,6 +270,15 @@ type AdminAuditEventRow = QueryResultRow & {
   target_id: string;
   details: Record<string, unknown> | string;
   created_at: Date | string;
+};
+
+type AdminUserRow = QueryResultRow & {
+  id: string;
+  email: string;
+  role: AdminUserRole;
+  is_active: boolean;
+  created_at: Date | string;
+  updated_at: Date | string;
 };
 
 type OrderAdminNoteRow = QueryResultRow & {
@@ -627,6 +654,15 @@ const rowToAdminAuditEvent = (row: AdminAuditEventRow): AdminAuditEvent => ({
   targetId: row.target_id,
   details: typeof row.details === "string" ? JSON.parse(row.details) as Record<string, unknown> : row.details,
   createdAt: asIsoString(row.created_at) ?? "",
+});
+
+const rowToAdminUser = (row: AdminUserRow): AdminUserRecord => ({
+  id: row.id,
+  email: row.email,
+  role: row.role,
+  isActive: row.is_active,
+  createdAt: asIsoString(row.created_at) ?? "",
+  updatedAt: asIsoString(row.updated_at) ?? "",
 });
 
 const rowToOrderAdminNote = (row: OrderAdminNoteRow): OrderAdminNote => ({
@@ -1476,6 +1512,66 @@ export const listAdminAuditEvents = async (targetType: string, targetId: string)
   );
 
   return result.rows.map(rowToAdminAuditEvent);
+};
+
+export const getAdminUserByEmail = async (email: string) => {
+  if (!hasCommerceDatabaseConfig()) {
+    return null;
+  }
+
+  const result = await query<AdminUserRow>(
+    `SELECT *
+     FROM admin_users
+     WHERE lower(email) = lower($1)
+       AND is_active = true
+     LIMIT 1`,
+    [email],
+  );
+
+  return result.rows[0] ? rowToAdminUser(result.rows[0]) : null;
+};
+
+export const consumeApiRateLimit = async (params: {
+  keyHash: string;
+  scope: string;
+  limit: number;
+  windowSeconds: number;
+}): Promise<ApiRateLimitResult> => {
+  const result = await query<QueryResultRow & { count: number; window_start: Date | string }>(
+    `INSERT INTO api_rate_limits (
+       key_hash,
+       scope,
+       window_start,
+       count,
+       updated_at
+     ) VALUES ($1, $2, NOW(), 1, NOW())
+     ON CONFLICT (key_hash, scope) DO UPDATE
+     SET window_start = CASE
+           WHEN api_rate_limits.window_start <= NOW() - ($4::integer * INTERVAL '1 second')
+           THEN NOW()
+           ELSE api_rate_limits.window_start
+         END,
+         count = CASE
+           WHEN api_rate_limits.window_start <= NOW() - ($4::integer * INTERVAL '1 second')
+           THEN 1
+           ELSE api_rate_limits.count + 1
+         END,
+         updated_at = NOW()
+     RETURNING count, window_start`,
+    [params.keyHash, params.scope, params.limit, params.windowSeconds],
+  );
+
+  const row = result.rows[0];
+  const count = Number(row.count);
+  const windowStart = row.window_start instanceof Date ? row.window_start : new Date(row.window_start);
+  const resetAt = new Date(windowStart.getTime() + params.windowSeconds * 1000).toISOString();
+
+  return {
+    allowed: count <= params.limit,
+    limit: params.limit,
+    remaining: Math.max(0, params.limit - count),
+    resetAt,
+  };
 };
 
 export const updateOrderAdminStatus = async (params: {

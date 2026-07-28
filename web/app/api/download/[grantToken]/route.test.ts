@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 import {
   claimGrantDownload,
+  consumeApiRateLimit,
   findGrantByToken,
   getOrderById,
   getProductDownloadMetadata,
@@ -14,6 +15,7 @@ import {
 
 vi.mock("@/lib/commerce", () => ({
   claimGrantDownload: vi.fn(),
+  consumeApiRateLimit: vi.fn(),
   findGrantByToken: vi.fn(),
   getOrderById: vi.fn(),
   getProductDownloadMetadata: vi.fn(),
@@ -62,6 +64,12 @@ beforeEach(() => {
   vi.mocked(createPresignedDownloadUrl).mockResolvedValue(
     "https://s3.example.com/downloads/hot-packet/hot-packet.zip?X-Amz-Signature=test",
   );
+  vi.mocked(consumeApiRateLimit).mockResolvedValue({
+    allowed: true,
+    limit: 60,
+    remaining: 59,
+    resetAt: new Date(Date.now() + 60_000).toISOString(),
+  });
   vi.mocked(claimGrantDownload).mockResolvedValue({
     status: "claimed",
     grant: { ...validGrant, downloadCount: 1 },
@@ -69,6 +77,20 @@ beforeEach(() => {
 });
 
 describe("download route", () => {
+  it("rejects requests over the route rate limit", async () => {
+    vi.mocked(consumeApiRateLimit).mockResolvedValue({
+      allowed: false,
+      limit: 60,
+      remaining: 0,
+      resetAt: new Date(Date.now() + 60_000).toISOString(),
+    });
+
+    const response = await callRoute("limited-token");
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({ error: "Too many requests. Try again later." });
+  });
+
   it("rejects an invalid grant token", async () => {
     vi.mocked(findGrantByToken).mockResolvedValue(null);
 

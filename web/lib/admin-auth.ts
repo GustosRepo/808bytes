@@ -1,52 +1,138 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
+import { getAdminUserByEmail, type AdminUserRole } from "@/lib/commerce";
 
-const ADMIN_COOKIE = "808bytes_admin";
+export type AuthenticatedAdmin = {
+  id: string;
+  email: string;
+  role: AdminUserRole;
+};
 
-const getAdminToken = () => process.env.ADMIN_ACCESS_TOKEN;
+type AdminSignInResult =
+  | { ok: true; admin: AuthenticatedAdmin }
+  | { ok: false; reason: "config" | "invalid" | "unauthorized" };
 
-export const isAdminAuthConfigured = () => Boolean(getAdminToken());
+const getSupabaseUrl = () => process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const getSupabasePublishableKey = () =>
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const isAdminAuthConfigured = () => Boolean(getSupabaseUrl() && getSupabasePublishableKey());
 
 export const canUseDevAdminBypass = () =>
   process.env.NODE_ENV !== "production" && !isAdminAuthConfigured();
 
-export const isAdminAuthenticated = async () => {
-  if (canUseDevAdminBypass()) {
-    return true;
-  }
+const createSupabaseAdminClient = async () => {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabasePublishableKey();
 
-  const token = getAdminToken();
-  if (!token) {
-    return false;
+  if (!supabaseUrl || !supabaseKey) {
+    return null;
   }
 
   const cookieStore = await cookies();
-  return cookieStore.get(ADMIN_COOKIE)?.value === token;
-};
 
-export const requireAdmin = async () => {
-  if (!(await isAdminAuthenticated())) {
-    redirect("/admin/login");
-  }
-};
-
-export const setAdminCookie = async (token: string) => {
-  const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/admin",
-    maxAge: 60 * 60 * 8,
+  return createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Server Components cannot write cookies. Server Actions can.
+        }
+      },
+    },
   });
 };
 
-export const clearAdminCookie = async () => {
-  const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_COOKIE);
+const getAdminForUser = async (user: User | null): Promise<AuthenticatedAdmin | null> => {
+  const email = user?.email?.toLowerCase();
+  if (!user || !email) {
+    return null;
+  }
+
+  const adminUser = await getAdminUserByEmail(email);
+  if (!adminUser?.isActive) {
+    return null;
+  }
+
+  return { id: user.id, email, role: adminUser.role };
 };
 
-export const verifyAdminToken = (token: string) => {
-  const expected = getAdminToken();
-  return Boolean(expected && token === expected);
+export const getAuthenticatedAdmin = async () => {
+  if (canUseDevAdminBypass()) {
+    return {
+      id: "local-dev-admin",
+      email: "local-dev-admin@808bytes.test",
+      role: "owner" as const,
+    };
+  }
+
+  const supabase = await createSupabaseAdminClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    return null;
+  }
+
+  return getAdminForUser(data.user);
+};
+
+export const isAdminAuthenticated = async () => Boolean(await getAuthenticatedAdmin());
+
+export const requireAdmin = async () => {
+  const admin = await getAuthenticatedAdmin();
+  if (!admin) {
+    redirect("/admin/login");
+  }
+
+  return admin;
+};
+
+export const signInAdmin = async (email: string, password: string): Promise<AdminSignInResult> => {
+  if (canUseDevAdminBypass()) {
+    return {
+      ok: true,
+      admin: {
+        id: "local-dev-admin",
+        email: "local-dev-admin@808bytes.test",
+        role: "owner",
+      },
+    };
+  }
+
+  const supabase = await createSupabaseAdminClient();
+  if (!supabase) {
+    return { ok: false, reason: "config" };
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  const admin = await getAdminForUser(data.user);
+  if (!admin) {
+    await supabase.auth.signOut();
+    return { ok: false, reason: "unauthorized" };
+  }
+
+  return { ok: true, admin };
+};
+
+export const signOutAdmin = async () => {
+  const supabase = await createSupabaseAdminClient();
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
 };

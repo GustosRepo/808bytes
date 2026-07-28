@@ -14,8 +14,19 @@ import {
   verifyLemonSqueezyWebhookSignature,
 } from "@/lib/lemon-squeezy";
 import { sendReceiptEmail } from "@/lib/receipt-email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const rateLimited = await checkRateLimit({
+    request,
+    scope: "lemon_webhook",
+    limit: 180,
+    windowSeconds: 60,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
   if (!hasLemonSqueezyWebhookConfig()) {
     return NextResponse.json(
       { error: "Lemon Squeezy webhook is not configured. Set LEMON_SQUEEZY_WEBHOOK_SECRET." },
@@ -63,6 +74,14 @@ export async function POST(request: Request) {
   const result = await finalizeOrderAsPaid(orderId);
   if (!result) {
     return NextResponse.json({ error: "Unable to finalize order." }, { status: 500 });
+  }
+
+  if (result.createdGrants.length === 0) {
+    return NextResponse.json({
+      received: true,
+      orderId: result.order.id,
+      duplicate: true,
+    });
   }
 
   const origin = normalizeAppOrigin(new URL(request.url).origin);

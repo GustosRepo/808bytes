@@ -162,6 +162,21 @@ try {
     CREATE INDEX IF NOT EXISTS idx_admin_audit_events_target
       ON admin_audit_events(target_type, target_id, created_at DESC);
 
+    CREATE TABLE IF NOT EXISTS admin_users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('owner', 'admin')),
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    );
+
+    DROP INDEX IF EXISTS idx_admin_users_email;
+    CREATE UNIQUE INDEX idx_admin_users_email
+      ON admin_users(lower(email));
+    CREATE INDEX IF NOT EXISTS idx_admin_users_active
+      ON admin_users(is_active);
+
     CREATE TABLE IF NOT EXISTS order_admin_notes (
       id TEXT PRIMARY KEY,
       order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -172,6 +187,18 @@ try {
 
     CREATE INDEX IF NOT EXISTS idx_order_admin_notes_order_id
       ON order_admin_notes(order_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS api_rate_limits (
+      key_hash TEXT NOT NULL,
+      scope TEXT NOT NULL,
+      window_start TIMESTAMPTZ NOT NULL,
+      count INTEGER NOT NULL CHECK (count > 0),
+      updated_at TIMESTAMPTZ NOT NULL,
+      PRIMARY KEY (key_hash, scope)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_api_rate_limits_updated_at
+      ON api_rate_limits(updated_at);
   `);
 
   await pool.query(`
@@ -295,6 +322,56 @@ try {
           updated_at = NOW();
     `,
   );
+
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "")
+    .split(/[,\s]+/)
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  for (const email of adminEmails) {
+    await pool.query(
+      `INSERT INTO admin_users (
+        id,
+        email,
+        role,
+        is_active,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, 'owner', true, NOW(), NOW())
+      ON CONFLICT ((lower(email))) DO UPDATE
+      SET role = CASE WHEN admin_users.role = 'owner' THEN admin_users.role ELSE EXCLUDED.role END,
+          email = EXCLUDED.email,
+          is_active = true,
+          updated_at = NOW()`,
+      [`admin_${email.replace(/[^a-z0-9]+/g, "_")}`, email],
+    );
+  }
+
+  await pool.query(`
+    DO $$
+    DECLARE
+      commerce_tables text := 'orders, order_items, download_grants, product_downloads, product_inventory, order_access_tokens, admin_audit_events, admin_users, order_admin_notes, api_rate_limits';
+    BEGIN
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+        EXECUTE 'REVOKE ALL ON TABLE ' || commerce_tables || ' FROM anon';
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+        EXECUTE 'REVOKE ALL ON TABLE ' || commerce_tables || ' FROM authenticated';
+      END IF;
+    END $$;
+
+    ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE download_grants ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE product_downloads ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE product_inventory ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE order_access_tokens ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE admin_audit_events ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE order_admin_notes ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE api_rate_limits ENABLE ROW LEVEL SECURITY;
+  `);
 
   console.log("Postgres commerce schema migrated.");
 } finally {

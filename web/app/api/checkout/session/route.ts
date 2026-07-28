@@ -12,6 +12,8 @@ import {
   createLemonSqueezyCheckout,
   hasLemonSqueezyCheckoutConfig,
 } from "@/lib/lemon-squeezy";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { isMockCheckoutEnabled } from "@/lib/runtime-config";
 
 type CheckoutSessionBody = {
   email?: string;
@@ -21,6 +23,16 @@ type CheckoutSessionBody = {
 };
 
 export async function POST(request: Request) {
+  const ipRateLimited = await checkRateLimit({
+    request,
+    scope: "checkout_session_ip",
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (ipRateLimited) {
+    return ipRateLimited;
+  }
+
   let body: CheckoutSessionBody;
 
   try {
@@ -34,6 +46,17 @@ export async function POST(request: Request) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
+  }
+
+  const emailRateLimited = await checkRateLimit({
+    request,
+    scope: "checkout_session_email",
+    identifier: email,
+    limit: 8,
+    windowSeconds: 600,
+  });
+  if (emailRateLimited) {
+    return emailRateLimited;
   }
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -85,8 +108,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const mockCheckoutEnabled = process.env.COMMERCE_MOCK_CHECKOUT === "true";
-  if (mockCheckoutEnabled) {
+  if (isMockCheckoutEnabled()) {
     const created = await createOrder({
       email,
       quote,

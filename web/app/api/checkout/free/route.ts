@@ -10,6 +10,7 @@ import {
   type CartInputItem,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type FreeCheckoutBody = {
   email?: string;
@@ -17,6 +18,16 @@ type FreeCheckoutBody = {
 };
 
 export async function POST(request: Request) {
+  const ipRateLimited = await checkRateLimit({
+    request,
+    scope: "checkout_free_ip",
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (ipRateLimited) {
+    return ipRateLimited;
+  }
+
   let body: FreeCheckoutBody;
 
   try {
@@ -30,6 +41,17 @@ export async function POST(request: Request) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
+  }
+
+  const emailRateLimited = await checkRateLimit({
+    request,
+    scope: "checkout_free_email",
+    identifier: email,
+    limit: 5,
+    windowSeconds: 600,
+  });
+  if (emailRateLimited) {
+    return emailRateLimited;
   }
 
   if (!Array.isArray(items) || items.length === 0) {

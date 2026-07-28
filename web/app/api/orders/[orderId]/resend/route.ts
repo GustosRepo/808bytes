@@ -8,6 +8,7 @@ import {
   verifyOrderAccessToken,
 } from "@/lib/commerce";
 import { sendReceiptEmail } from "@/lib/receipt-email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type RouteParams = {
   params: Promise<{
@@ -22,6 +23,15 @@ type ResendBody = {
 
 export async function POST(request: Request, { params }: RouteParams) {
   const { orderId } = await params;
+  const ipRateLimited = await checkRateLimit({
+    request,
+    scope: "order_resend_ip",
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (ipRateLimited) {
+    return ipRateLimited;
+  }
 
   if (!hasCommerceDatabaseConfig()) {
     return NextResponse.json(
@@ -42,6 +52,17 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "A valid order email is required." }, { status: 400 });
+  }
+
+  const orderRateLimited = await checkRateLimit({
+    request,
+    scope: "order_resend_order",
+    identifier: `${orderId}:${email}`,
+    limit: 3,
+    windowSeconds: 900,
+  });
+  if (orderRateLimited) {
+    return orderRateLimited;
   }
 
   if (!body.orderToken || !(await verifyOrderAccessToken(orderId, body.orderToken))) {

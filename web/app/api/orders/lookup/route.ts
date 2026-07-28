@@ -5,8 +5,19 @@ import {
   hasCommerceDatabaseConfig,
   verifyOrderAccessToken,
 } from "@/lib/commerce";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
+  const rateLimited = await checkRateLimit({
+    request,
+    scope: "order_lookup",
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
   const url = new URL(request.url);
   const orderId = url.searchParams.get("order_id");
   const sessionId = url.searchParams.get("session_id");
