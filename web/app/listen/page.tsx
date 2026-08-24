@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Script from "next/script";
 import { songPromo } from "@/lib/promo-content";
+
+const metaPixelId = "1083388787460947";
 
 export const metadata: Metadata = {
   title: `${songPromo.title} by ${songPromo.artist}`,
@@ -19,6 +22,18 @@ export const metadata: Metadata = {
 export default function ListenPage() {
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-6 text-white sm:px-6">
+      <Script id="meta-pixel" strategy="afterInteractive">
+        {`
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '${metaPixelId}');
+          fbq('track', 'PageView');
+          fbq('track', 'ViewContent', {content_name: '${songPromo.title}', content_category: 'music'});
+        `}
+      </Script>
+      <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" height="1" src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`} style={{ display: "none" }} width="1" />
+      </noscript>
       <section className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col">
         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.18em] text-white/55">
           <span>{songPromo.releaseLine}</span>

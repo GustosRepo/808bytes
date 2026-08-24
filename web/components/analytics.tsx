@@ -10,6 +10,12 @@ type AnalyticsPayload = {
   href?: string;
 };
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+  }
+}
+
 const sendAnalytics = (payload: AnalyticsPayload) => {
   const body = JSON.stringify({
     ...payload,
@@ -54,6 +60,14 @@ function AnalyticsInner() {
         href: target instanceof HTMLAnchorElement ? target.href : undefined,
         path: window.location.pathname,
       });
+
+      if (target.dataset.analytics === "promo_platform_click" && window.fbq) {
+        const label = target.dataset.analyticsLabel ?? "Platform";
+        window.fbq("trackCustom", `Click${label}`, {
+          content_name: label,
+          destination_url: target instanceof HTMLAnchorElement ? target.href : undefined,
+        });
+      }
     };
 
     document.addEventListener("click", handleClick);
