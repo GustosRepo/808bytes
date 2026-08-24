@@ -14,6 +14,7 @@ const allowedEvents = new Set([
   "free_checkout_start",
   "cart_checkout",
   "support_email",
+  "promo_platform_click",
 ]);
 
 export async function POST(request: Request) {

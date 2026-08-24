@@ -14,7 +14,7 @@ Tracking rule:
 - Phase 3 (Workstation Polish): in progress (macros + stop/reset + keyboard/focus implemented)
 - Phase 4 (Commerce): in progress (Lemon Squeezy checkout/webhook verified locally via ngrok; Postgres persistence, signed download grants, live Resend receipt delivery, and order access tokens implemented)
 - Phase 5 (Content And Media): not started
-- Phase 6 (Launch Hardening): in progress (policy pages, SEO/social basics, first-party analytics hooks, and accessibility/reduced-motion pass implemented; manual browser/device QA still pending)
+- Phase 6 (Launch Hardening): in progress (policy pages, SEO/social basics, first-party analytics hooks, hidden ad landing page, and accessibility/reduced-motion pass implemented; manual browser/device QA still pending)
 
 ## Phase 1: Playable Brand Experience
 
@@ -86,8 +86,10 @@ Verification snapshot:
 
 ## Phase 5: Content And Media
 
+- [x] Add hidden song-promo ad landing page at `/listen`
 - [ ] Replace placeholder covers with final artwork
 - [ ] Add real audio previews
+- [ ] Replace `/listen` placeholder platform URLs with final Spotify, YouTube, and TikTok links
 - [ ] Choose a CMS or maintainable product-data workflow
 - [ ] Add image/audio optimization and publishing validation
 
@@ -104,6 +106,7 @@ Definition of done:
 - [x] Legal, support, refund, and privacy content
 Verification snapshot:
 - [x] `/support`, `/privacy`, `/refunds`, `/terms`, and `/legal` routes return 200 locally
+- [x] `/listen` hidden song-promo ad route returns 200 locally
 - [x] `/robots.txt`, `/sitemap.xml`, and `/opengraph-image` return 200 locally
 - [x] `/api/analytics` accepts allowed first-party analytics events locally
 

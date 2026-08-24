@@ -10,8 +10,10 @@ Status key:
 
 - [ ] Confirm logo and brand assets
 - [x] Finalize starter product/category names and descriptions
+- [x] Add hidden song-promo ad landing page at `/listen`
 - [ ] Replace placeholder product artwork
 - [ ] Add and optimize actual product audio previews
+- [ ] Replace `/listen` placeholder song links with final Spotify, YouTube, and TikTok URLs
 - [ ] Proofread workstation, store, product, About, and policy copy
 
 ## Workstation QA
@@ -52,6 +54,7 @@ Status key:
 - [x] Run `npm run build`
 - [ ] Check production console for client errors
 - [x] Add first-party analytics endpoint and key event hooks
+- [x] Track hidden song-promo platform clicks
 - [x] Add metadata and Open Graph image generation
 - [x] Generate sitemap and robots rules
 - [x] Confirm default 404 route exists
