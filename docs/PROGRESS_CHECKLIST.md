@@ -1,6 +1,6 @@
 # Progress Checklist
 
-Last updated: 2026-07-21
+Last updated: 2026-08-24
 
 Tracking rule:
 - This file is the source of truth for project status.
@@ -9,8 +9,8 @@ Tracking rule:
 
 ## Current Snapshot
 
-- Phase 1 (Playable Brand Experience): in progress (feature complete, QA pending)
-- Phase 2 (Storefront Foundation): in progress (prototype implemented)
+- Phase 1 (Playable Brand Experience): in progress (feature complete, mobile touch layout pass complete, real device QA pending)
+- Phase 2 (Storefront Foundation): in progress (prototype implemented, mobile cart/checkout row wrapping pass complete)
 - Phase 3 (Workstation Polish): in progress (macros + stop/reset + keyboard/focus implemented)
 - Phase 4 (Commerce): in progress (Lemon Squeezy checkout/webhook verified locally via ngrok; Postgres persistence, signed download grants, live Resend receipt delivery, and order access tokens implemented)
 - Phase 5 (Content And Media): not started
@@ -23,6 +23,7 @@ Tracking rule:
 - [x] Add Kick, Clap, Hats, and Perc voices
 - [x] Add stable Web Audio scheduling and gain control
 - [x] Connect featured products to the workstation display
+- [x] Improve mobile workstation touch layout for pads, macro controls, and mini keys
 - [ ] Browser QA across Safari, Chrome, Firefox, iOS Safari, Android Chrome
 - [ ] Device/speaker QA for clipping, balance, and loop stop behavior
 
@@ -35,6 +36,7 @@ Definition of done:
 - [x] Add type filters and explicit price/free labels
 - [x] Add dedicated product detail routes
 - [x] Keep preview and purchase actions distinct
+- [x] Improve mobile wrapping for cart, checkout, product cards, and product detail actions
 - [ ] Validate final UX polish and mobile behavior
 
 Definition of done:

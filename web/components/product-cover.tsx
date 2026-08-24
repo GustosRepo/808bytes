@@ -16,9 +16,9 @@ export default function ProductCover({ product, categoryName, className = "", co
       style={{ backgroundImage: `url(${product.cover})` }}
     >
       {!compact ? (
-        <div className="absolute inset-x-4 bottom-4 border border-[#151515] bg-[#151515]/92 p-3 text-white">
+        <div className="absolute inset-x-3 bottom-3 border border-[#151515] bg-[#151515]/92 p-2 text-white sm:inset-x-4 sm:bottom-4 sm:p-3">
           <p className="text-[0.62rem] font-bold uppercase text-[#d0cabf]">{categoryName}</p>
-          <p className="mt-1 text-lg font-bold leading-none [font-family:var(--font-heading)]">{product.title}</p>
+          <p className="mt-1 text-base font-bold leading-none [font-family:var(--font-heading)] sm:text-lg">{product.title}</p>
         </div>
       ) : null}
       {!product.isPurchasable ? (

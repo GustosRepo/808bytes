@@ -84,7 +84,7 @@ export default function CartClient({ products }: CartClientProps) {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_12%_10%,#f8f5ee_0,#efe9dd_45%,#e7dfd0_100%)] px-4 py-10 text-[#151515] sm:px-6">
-      <section className="mx-auto max-w-6xl border border-[#151515] bg-white p-5 shadow-[10px_10px_0_#151515] sm:p-7">
+      <section className="mx-auto max-w-6xl border border-[#151515] bg-white p-4 shadow-[6px_6px_0_#151515] sm:p-7 sm:shadow-[10px_10px_0_#151515]">
         <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#b34b44]">
           <span>Cart editor</span>
           <span className="ml-auto text-[#6f6a5e]">{itemCount} units</span>
@@ -109,7 +109,7 @@ export default function CartClient({ products }: CartClientProps) {
                 </div>
               ) : (
                 cartRows.map((row) => (
-                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border border-[#d8d0c0] bg-[#fbfaf6] p-3" key={row.productId}>
+                  <div className="grid gap-3 border border-[#d8d0c0] bg-[#fbfaf6] p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center" key={row.productId}>
                     <div>
                       <p className="text-xs font-bold uppercase text-[#8a8376]">{typeLabel[row.product.type]}</p>
                       <p className="text-sm font-bold text-[#151515]">{row.product.title}</p>
@@ -119,7 +119,7 @@ export default function CartClient({ products }: CartClientProps) {
                         </p>
                       ) : null}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-between gap-2 sm:justify-start">
                       <button className="h-8 w-8 border border-[#151515] text-sm font-bold" onClick={() => updateQuantity(row.productId, row.quantity - 1)} type="button">
                         -
                       </button>
@@ -128,7 +128,7 @@ export default function CartClient({ products }: CartClientProps) {
                         +
                       </button>
                     </div>
-                    <p className="text-sm font-bold">{formatUsd(row.lineTotal)}</p>
+                    <p className="border-t border-[#d8d0c0] pt-2 text-sm font-bold sm:border-t-0 sm:pt-0 sm:text-right">{formatUsd(row.lineTotal)}</p>
                   </div>
                 ))
               )}

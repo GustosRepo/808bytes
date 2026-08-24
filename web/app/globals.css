@@ -25,14 +25,26 @@ body {
   color: var(--text);
   background: var(--bg);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  overflow-x: hidden;
 }
 
 button,
-a {
+a,
+input {
   outline-offset: 2px;
 }
 
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--accent-cyan);
+}
+
+button,
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(120, 240, 162, 0.22);
+}
+
+input {
+  font-size: 16px;
 }

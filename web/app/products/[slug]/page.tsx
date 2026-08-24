@@ -29,7 +29,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] p-3 text-[var(--text)]">
-      <section className="mx-auto max-w-[1180px] overflow-hidden border border-black bg-[var(--frame)] shadow-[0_18px_48px_rgba(0,0,0,0.5)]">
+      <section className="mx-auto max-w-[1180px] overflow-hidden border border-black bg-[var(--frame)] shadow-[0_10px_28px_rgba(0,0,0,0.42)] sm:shadow-[0_18px_48px_rgba(0,0,0,0.5)]">
         <header className="border-b border-[#090a0c] bg-[#141518]">
           <DawMenuBar
             items={[
@@ -46,7 +46,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span className="border border-[#4a4c50] bg-[#1b1d20] px-3 py-1 text-[0.68rem] text-[#aaa69e]">
               Insert 08 / {category?.name ?? "Catalog"}
             </span>
-            <span className="ml-auto border border-[#4a4c50] bg-[#1b1d20] px-3 py-1 text-[0.68rem] font-semibold text-[var(--accent-amber)]">
+            <span className="border border-[#4a4c50] bg-[#1b1d20] px-3 py-1 text-[0.68rem] font-semibold text-[var(--accent-amber)] sm:ml-auto">
               {formatPrice(product)}
             </span>
             <span className="border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-1 text-[0.68rem] font-bold uppercase text-[var(--commerce-text)]">
@@ -97,7 +97,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Product actions
               </div>
               <div className="p-3">
-                <div className="grid grid-cols-[1fr_auto] gap-2 text-sm">
+                <div className="grid gap-2 text-sm sm:grid-cols-[1fr_auto]">
                   <span className="text-[var(--muted)]">Type</span>
                   <span>{product.type.toUpperCase()}</span>
                   <span className="text-[var(--muted)]">Category</span>

@@ -736,7 +736,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
             </Link>
           </div>
           <a
-            className="ml-auto border border-[#151515] bg-[#151515] px-4 py-2 text-sm font-bold uppercase text-white transition hover:bg-[#2a2a2a]"
+            className="ml-auto whitespace-nowrap border border-[#151515] bg-[#151515] px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-[#2a2a2a] sm:px-4 sm:text-sm"
             href="#store"
           >
             Shop sounds
@@ -752,8 +752,8 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
             "linear-gradient(180deg, rgba(242,239,231,0.94), rgba(234,229,218,0.98)), repeating-linear-gradient(90deg, rgba(21,21,21,0.05) 0, rgba(21,21,21,0.05) 1px, transparent 1px, transparent 72px)",
         }}
       >
-        <div className="mx-auto grid min-h-[92svh] max-w-7xl content-center gap-8 pb-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(520px,1.08fr)] lg:items-center">
-          <div className="max-w-2xl">
+        <div className="mx-auto grid min-h-[92svh] max-w-7xl min-w-0 content-center gap-8 pb-12 lg:grid-cols-[minmax(0,0.92fr)_minmax(520px,1.08fr)] lg:items-center">
+          <div className="min-w-0 max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#b34b44]">Interactive sound shop</p>
             <h1 className="mt-4 text-5xl font-bold leading-[0.9] tracking-normal [font-family:var(--font-heading)] sm:text-7xl lg:text-8xl">
               808bytes
@@ -772,23 +772,23 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative min-w-0 max-w-full">
             <div className="absolute -top-5 right-8 hidden h-10 w-32 border border-[#151515]/20 bg-[#78dcca] lg:block" />
-            <div className="relative border border-[#151515] bg-[#e4dfd2] p-3 shadow-[12px_12px_0_#151515] sm:p-4">
-              <div className="grid gap-3 border border-[#151515] bg-[#d8d1c1] p-3 sm:p-4">
-                <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-                  <section className="border border-[#151515] bg-[#101113] p-3 text-white">
+            <div className="relative min-w-0 max-w-full border border-[#151515] bg-[#e4dfd2] p-2 shadow-[6px_6px_0_#151515] sm:p-4 sm:shadow-[12px_12px_0_#151515]">
+              <div className="grid min-w-0 gap-3 border border-[#151515] bg-[#d8d1c1] p-3 sm:p-4">
+                <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                  <section className="min-w-0 border border-[#151515] bg-[#101113] p-3 text-white">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-xs font-bold uppercase text-[#8d918c]">808bytes OS</span>
                       <span className="h-2 w-16" style={{ backgroundColor: activeBankData.color }} />
                     </div>
-                    <div className="mt-5 grid grid-cols-[1fr_auto] gap-5">
+                    <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_auto] sm:gap-5">
                       <div>
                         <p className="text-xs uppercase text-[#9da19b]">{typeLabel[selectedProduct.type]}</p>
                         <h2 className="mt-1 text-3xl font-bold leading-none [font-family:var(--font-heading)]">{selectedProduct.title}</h2>
                         <p className="mt-3 min-h-12 text-sm leading-6 text-[#c9c7be]">{selectedProduct.shortDescription}</p>
                       </div>
-                      <div className="grid h-24 w-24 place-items-center border border-white/20 bg-[#1e211f]">
+                      <div className="grid h-24 w-full place-items-center border border-white/20 bg-[#1e211f] sm:w-24">
                         <div className="grid grid-cols-4 gap-1">
                           {Array.from({ length: 16 }).map((_, index) => (
                             <span
@@ -804,11 +804,11 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-5 flex h-16 items-end gap-1 border-t border-white/10 pt-3">
+                    <div className="mt-5 flex h-16 min-w-0 items-end gap-1 overflow-hidden border-t border-white/10 pt-3">
                       {Array.from({ length: 34 }).map((_, index) => (
                         <span
                           aria-hidden="true"
-                          className="w-full"
+                          className="min-w-0 flex-1"
                           key={`screen-wave-${index}`}
                           style={{
                             height: 10 + ((index * 7 + selectedProduct.title.length * 3 + activeStepCount + activeKeys.length * 5) % 48),
@@ -820,7 +820,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     </div>
                   </section>
 
-                  <section className="grid gap-2 border border-[#151515] bg-[#c9c0ad] p-3">
+                  <section className="grid min-w-0 gap-2 border border-[#151515] bg-[#c9c0ad] p-3">
                     <p className="text-xs font-bold uppercase text-[#55524b]">Banks</p>
                     <div className="grid grid-cols-2 gap-2">
                       {banks.map((bank) => (
@@ -838,7 +838,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         </button>
                       ))}
                     </div>
-                    <div className="mt-2 grid grid-cols-4 gap-2">
+                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {macroDefinitions.map((macro) => {
                         const value = macroValues[macro.id];
 
@@ -846,7 +846,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         <div className="text-center" key={macro.id}>
                           <button
                             aria-label={`${macro.label} macro`}
-                            className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#151515] bg-[#eee7d8] shadow-[inset_3px_4px_0_rgba(255,255,255,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
+                            className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-[#151515] bg-[#eee7d8] shadow-[inset_3px_4px_0_rgba(255,255,255,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
                             onClick={() => updateMacro(macro.id, value + 0.08)}
                             onContextMenu={(event) => {
                               event.preventDefault();
@@ -866,6 +866,24 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                           </button>
                           <p className="mt-1 text-[0.62rem] font-bold uppercase text-[#5d5a52]">{macro.label}</p>
                           <p className="text-[0.58rem] font-bold uppercase text-[#7b766a]">{Math.round(value * 100)}%</p>
+                          <div className="mx-auto mt-1 grid max-w-20 grid-cols-2 gap-1">
+                            <button
+                              aria-label={`Decrease ${macro.label} macro`}
+                              className="h-8 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                              onClick={() => updateMacro(macro.id, value - 0.08)}
+                              type="button"
+                            >
+                              -
+                            </button>
+                            <button
+                              aria-label={`Increase ${macro.label} macro`}
+                              className="h-8 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                              onClick={() => updateMacro(macro.id, value + 0.08)}
+                              type="button"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
                         );
                       })}
@@ -873,11 +891,11 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                   </section>
                 </div>
 
-                <section className="grid gap-3 md:grid-cols-[1fr_220px]">
-                  <div className="border border-[#151515] bg-[#beb5a4] p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase text-[#55524b]">Step pads (1-4 banks, Space drums, M melody, R reset, X stop)</p>
-                      <div className="flex items-center gap-2">
+                <section className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+                  <div className="min-w-0 border border-[#151515] bg-[#beb5a4] p-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <p className="min-w-0 flex-1 text-xs font-bold uppercase text-[#55524b]">Step pads (1-4 banks, Space drums, M melody, R reset, X stop)</p>
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs font-bold uppercase text-[#55524b]">{activeStepCount}/16 active</p>
                         <button
                           className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
@@ -888,14 +906,14 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         </button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-8 gap-2 sm:grid-cols-16">
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-16">
                       {Array.from({ length: 16 }).map((_, index) => {
                         const isActive = activeSteps.includes(index);
 
                         return (
                           <button
                             aria-label={`Toggle step ${index + 1}`}
-                            className="aspect-square min-h-10 border border-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                            className="aspect-square min-h-12 border border-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] lg:min-h-10"
                             key={`step-${index}`}
                             onClick={() => {
                               toggleStep(index);
@@ -912,7 +930,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 border border-[#151515] bg-[#beb5a4] p-3 md:grid-cols-2">
+                  <div className="grid min-w-0 grid-cols-2 gap-2 border border-[#151515] bg-[#beb5a4] p-3 sm:grid-cols-4 md:grid-cols-2">
                     {transportLabels.map((label, index) => (
                       <button
                         className="h-12 border border-[#151515] bg-[#eee7d8] text-xs font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
@@ -959,7 +977,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                   </div>
                 </section>
 
-                <section className="border border-[#151515] bg-[#beb5a4] p-3">
+                <section className="min-w-0 border border-[#151515] bg-[#beb5a4] p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-xs font-bold uppercase text-[#55524b]">Mini keys</p>
                     <button
@@ -970,7 +988,8 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                       {isKeyPlaying ? "Stop keys" : `${activeMelodyNotes.length} key loop`}
                     </button>
                   </div>
-                  <div className="relative h-28 border border-[#151515] bg-[#151515] p-1">
+                  <div className="-mx-1 max-w-full overflow-x-auto px-1 pb-1">
+                    <div className="relative h-32 w-[560px] max-w-none border border-[#151515] bg-[#151515] p-1 sm:h-28 sm:w-full">
                     <div className="flex h-full gap-1">
                       {whiteKeys.map((note, index) => {
                         const isActive = activeKeys.includes(note);
@@ -978,7 +997,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         return (
                           <button
                             aria-label={`Toggle key ${note}`}
-                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-[0.62rem] font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-xs font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:text-[0.62rem]"
                             key={note}
                             onClick={() => {
                               toggleKey(note);
@@ -1005,7 +1024,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                       return (
                         <button
                           aria-label={`Toggle key ${keyData.note}`}
-                          className="absolute top-1 z-10 h-16 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                          className="absolute top-1 z-10 h-20 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:h-16"
                           key={keyData.note}
                           onClick={() => {
                             toggleKey(keyData.note);
@@ -1022,6 +1041,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         />
                       );
                     })}
+                    </div>
                   </div>
                 </section>
 
@@ -1118,7 +1138,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                       </div>
                       <p className="mt-3 min-h-12 text-sm leading-6 text-[#64645f]">{product.shortDescription}</p>
                     </button>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <button
                         className="bg-[#151515] px-3 py-2 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={!product.isPurchasable}
@@ -1184,7 +1204,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                   ))}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <button
                     className="bg-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!selectedProduct.isPurchasable}
