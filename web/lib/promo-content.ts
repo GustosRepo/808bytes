@@ -3,7 +3,7 @@ export const songPromo = {
   title: "Y Me Siento",
   subtitle: "Stream the song on Spotify or follow 808Bytes on YouTube.",
   releaseLine: "Out now",
-  coverArt: "/covers/sauce-box.svg",
+  coverArt: "/Una%20noche.PNG",
   previewUrl: "",
   links: [
     {
