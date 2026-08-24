@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import MockCheckoutClient from "@/components/mock-checkout-client";
 import { isMockCheckoutEnabled } from "@/lib/runtime-config";
+
+export const metadata: Metadata = {
+  title: "Mock Checkout",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function MockCheckoutPage() {
   if (!isMockCheckoutEnabled()) {

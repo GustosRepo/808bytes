@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { DawButtonLink, DawMenuBar, DawMeter } from "@/components/daw-chrome";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: "The 808bytes story, built around playable web instruments and digital producer tools.",
+  alternates: {
+    canonical: "/about",
+  },
+};
 
 const sessionTracks = [
   {

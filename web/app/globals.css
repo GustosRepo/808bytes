@@ -28,6 +28,37 @@ body {
   overflow-x: hidden;
 }
 
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  border: 1px solid #151515;
+  background: #ffffff;
+  color: #151515;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 button,
 a,
 input {

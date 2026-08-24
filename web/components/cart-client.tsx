@@ -152,7 +152,7 @@ export default function CartClient({ products }: CartClientProps) {
 
               <div className="mt-4 grid gap-2">
                 {cartRows.length > 0 && !hasUnavailableItems ? (
-                  <Link className="bg-[#151515] px-4 py-3 text-center text-sm font-bold uppercase text-white" href="/checkout">
+                  <Link className="bg-[#151515] px-4 py-3 text-center text-sm font-bold uppercase text-white" data-analytics="cart_checkout" href="/checkout">
                     Checkout
                   </Link>
                 ) : (

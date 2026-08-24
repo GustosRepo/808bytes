@@ -1,64 +1,74 @@
 # Launch Checklist
 
+Last updated: 2026-08-24
+
+Status key:
+- `[x]` complete locally
+- `[ ]` still open
+
 ## Brand And Content
 
-- Confirm logo and brand assets
-- Finalize product/category names and descriptions
-- Replace placeholder product artwork
-- Add and optimize actual product audio previews
-- Proofread workstation, store, product, and About copy
+- [ ] Confirm logo and brand assets
+- [x] Finalize starter product/category names and descriptions
+- [ ] Replace placeholder product artwork
+- [ ] Add and optimize actual product audio previews
+- [ ] Proofread workstation, store, product, About, and policy copy
 
 ## Workstation QA
 
-- Verify each Kick, Clap, Hats, and Perc bank edits its own pattern
-- Verify Beat and Melody start and stop independently
-- Verify default patterns form a balanced groove
-- Test both loops together for clipping and excessive loudness
-- Test rapid pad/key input for stuck or overlapping voices
-- Confirm AudioContext starts after a user gesture
-- Confirm playback stops and resources clean up when navigating away
-- Test Chrome, Safari, Firefox, iOS Safari, and Android Chrome
+- [ ] Verify each Kick, Clap, Hats, and Perc bank edits its own pattern on target browsers
+- [ ] Verify Beat and Melody start and stop independently on target browsers
+- [ ] Verify default patterns form a balanced groove on target speakers
+- [ ] Test both loops together for clipping and excessive loudness
+- [ ] Test rapid pad/key input for stuck or overlapping voices
+- [x] Confirm AudioContext starts after a user gesture in implementation
+- [ ] Confirm playback stops and resources clean up when navigating away
+- [ ] Test Chrome, Safari, Firefox, iOS Safari, and Android Chrome
 
 ## Store And Commerce
 
-- Verify all catalog filters and product links
-- Validate paid prices and free labels
-- Keep Preview separate from Buy/Download actions
-- Test cart calculations and checkout states
-- Test paid checkout and free-download delivery
-- Confirm merch stock statuses
+- [x] Verify all catalog filters and product links locally
+- [x] Validate paid prices and free labels in starter catalog
+- [x] Keep Preview separate from Buy/Download actions
+- [ ] Test cart calculations and checkout states after production deployment
+- [ ] Test paid checkout and free-download delivery after production deployment
+- [ ] Confirm merch stock/status language before public launch
 
 ## Accessibility And Responsive QA
 
-- Verify keyboard navigation and visible focus states
-- Verify accessible names for pads, keys, banks, and transports
-- Ensure state is not communicated by color alone
-- Check desktop, tablet, and mobile layouts for overlap and overflow
-- Test at 100% and 200% browser zoom
-- Verify reduced-motion behavior where motion is used
+- [x] Add skip link and visible focus baseline
+- [x] Verify accessible names for pads, keys, banks, and transports in implementation
+- [x] Add pressed states for banks, pads, keys, and filters
+- [x] Add reduced-motion CSS baseline
+- [x] Complete mobile layout pass for workstation, cart, checkout, and product detail
+- [ ] Check desktop, tablet, and mobile layouts for overlap and overflow on real devices
+- [ ] Test at 100% and 200% browser zoom
+- [ ] Run keyboard and screen-reader QA
 
 ## Technical
 
-- Run `npm run lint`
-- Run `npm run build`
-- Check production console for client errors
-- Configure analytics and key events
-- Add metadata and Open Graph images
-- Generate sitemap and robots rules
-- Set up 404 and fallback pages
+- [x] Run `npm run lint`
+- [x] Run `npm run test`
+- [x] Run `npm run build`
+- [ ] Check production console for client errors
+- [x] Add first-party analytics endpoint and key event hooks
+- [x] Add metadata and Open Graph image generation
+- [x] Generate sitemap and robots rules
+- [x] Confirm default 404 route exists
+- [ ] Configure production analytics sink if first-party event logging is not enough
 
 ## Legal And Operations
 
-- Publish Privacy Policy, Terms, and Refund Policy
-- Add contact/support details
-- Verify digital-product licensing language
-- Confirm download hosting, bandwidth, and backup plan
-- Verify confirmation and support emails
+- [x] Publish Privacy Policy, Terms, Refund Policy, Legal, and Support pages locally
+- [x] Add contact/support details
+- [x] Add digital-product licensing and redistribution language
+- [ ] Confirm download hosting, bandwidth, and backup plan
+- [ ] Verify production confirmation and support emails
 
 ## Launch Day
 
-- Deploy the production build
-- Smoke-test workstation, catalog, checkout, and downloads
-- Test on a real phone and laptop after deployment
-- Monitor checkout, download, audio, and client error logs
-- Announce the launch
+- [ ] Deploy the production build
+- [ ] Smoke-test workstation, catalog, checkout, and downloads on production
+- [ ] Test on a real phone and laptop after deployment
+- [ ] Monitor checkout, download, audio, analytics, and client error logs
+- [ ] Announce the launch

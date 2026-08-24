@@ -14,7 +14,7 @@ Tracking rule:
 - Phase 3 (Workstation Polish): in progress (macros + stop/reset + keyboard/focus implemented)
 - Phase 4 (Commerce): in progress (Lemon Squeezy checkout/webhook verified locally via ngrok; Postgres persistence, signed download grants, live Resend receipt delivery, and order access tokens implemented)
 - Phase 5 (Content And Media): not started
-- Phase 6 (Launch Hardening): not started
+- Phase 6 (Launch Hardening): in progress (policy pages, SEO/social basics, first-party analytics hooks, and accessibility/reduced-motion pass implemented; manual browser/device QA still pending)
 
 ## Phase 1: Playable Brand Experience
 
@@ -96,12 +96,16 @@ Definition of done:
 
 ## Phase 6: Launch Hardening
 
-- [ ] Accessibility and reduced-motion pass
-- [ ] Responsive and overlap QA
-- [ ] SEO metadata, social cards, sitemap, and robots rules
-- [ ] Analytics for workstation and commerce funnels
+- [x] Accessibility and reduced-motion pass
+- [ ] Responsive and overlap QA across real devices
+- [x] SEO metadata, social cards, sitemap, and robots rules
+- [x] Analytics hooks for workstation and commerce funnels
 - [ ] Performance and Web Audio lifecycle checks
-- [ ] Legal, support, refund, and privacy content
+- [x] Legal, support, refund, and privacy content
+Verification snapshot:
+- [x] `/support`, `/privacy`, `/refunds`, `/terms`, and `/legal` routes return 200 locally
+- [x] `/robots.txt`, `/sitemap.xml`, and `/opengraph-image` return 200 locally
+- [x] `/api/analytics` accepts allowed first-party analytics events locally
 
 Definition of done:
 - [ ] The experience is stable, measurable, legally complete, and ready for production traffic
@@ -116,6 +120,8 @@ Definition of done:
 - [ ] Run deployed free checkout test
 - [ ] Complete Phase 1 browser/device QA and close definition of done
 - [ ] Finish Phase 2 UX polish pass and close definition of done
+- [ ] Run Safari, Chrome, Firefox, iOS Safari, and Android Chrome QA
+- [ ] Replace first-party analytics logging with the chosen production analytics sink if needed
 - [ ] Tune sounds across Safari, Chrome, Firefox, mobile, and common speakers
 - [x] Replace in-memory commerce storage with Postgres database models
 - [x] Add signed object-storage downloads and receipt/resend email delivery

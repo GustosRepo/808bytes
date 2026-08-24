@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductCover from "@/components/product-cover";
+import { policyLinks } from "@/lib/site-content";
 import type { Category, Product } from "@/lib/store-data";
 import {
   CART_CHANGE_EVENT,
@@ -737,6 +738,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
           </div>
           <a
             className="ml-auto whitespace-nowrap border border-[#151515] bg-[#151515] px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-[#2a2a2a] sm:px-4 sm:text-sm"
+            data-analytics="nav_shop_sounds"
             href="#store"
           >
             Shop sounds
@@ -763,10 +765,10 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
               Browse drops like you are sketching a beat. Tap pads, switch banks, then scroll into a cleaner store built for plugins, packs, one-shots, and merch.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <a className="bg-[#151515] px-5 py-3 text-sm font-bold uppercase text-white transition hover:bg-[#30302d]" href="#store">
+              <a className="bg-[#151515] px-5 py-3 text-sm font-bold uppercase text-white transition hover:bg-[#30302d]" data-analytics="hero_enter_store" href="#store">
                 Enter store
               </a>
-              <Link className="border border-[#151515] px-5 py-3 text-sm font-bold uppercase text-[#151515] transition hover:bg-white" href={`/products/${selectedProduct.slug}`}>
+              <Link className="border border-[#151515] px-5 py-3 text-sm font-bold uppercase text-[#151515] transition hover:bg-white" data-analytics="hero_open_featured" href={`/products/${selectedProduct.slug}`}>
                 Open featured
               </Link>
             </div>
@@ -825,6 +827,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     <div className="grid grid-cols-2 gap-2">
                       {banks.map((bank) => (
                         <button
+                          aria-pressed={activeBank === bank.id}
                           className="h-14 border border-[#151515] text-xs font-bold uppercase text-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
                           key={bank.id}
                           onClick={() => setActiveBank(bank.id)}
@@ -913,6 +916,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         return (
                           <button
                             aria-label={`Toggle step ${index + 1}`}
+                            aria-pressed={isActive}
                             className="aspect-square min-h-12 border border-[#151515] transition hover:translate-y-[-1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] lg:min-h-10"
                             key={`step-${index}`}
                             onClick={() => {
@@ -997,6 +1001,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         return (
                           <button
                             aria-label={`Toggle key ${note}`}
+                            aria-pressed={isActive}
                             className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-xs font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:text-[0.62rem]"
                             key={note}
                             onClick={() => {
@@ -1024,6 +1029,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                       return (
                         <button
                           aria-label={`Toggle key ${keyData.note}`}
+                          aria-pressed={isActive}
                           className="absolute top-1 z-10 h-20 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:h-16"
                           key={keyData.note}
                           onClick={() => {
@@ -1094,6 +1100,9 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     className={`border px-4 py-2 text-sm font-bold uppercase transition ${
                       storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
                     }`}
+                    aria-pressed={storeFilter === filter}
+                    data-analytics="store_filter"
+                    data-analytics-label={filter}
                     key={filter}
                     onClick={() => setStoreFilter(filter)}
                     type="button"
@@ -1105,6 +1114,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
               <Link
                 aria-label={`Open checkout with ${cartCount} items`}
                 className="relative inline-flex h-10 w-10 items-center justify-center border border-[#151515] bg-white text-[#151515] transition hover:bg-[#f5f0e7]"
+                data-analytics="store_cart_open"
                 href="/checkout"
               >
                 <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.9" viewBox="0 0 24 24">
@@ -1141,13 +1151,21 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <button
                         className="bg-[#151515] px-3 py-2 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                        data-analytics="product_buy"
+                        data-analytics-label={product.title}
                         disabled={!product.isPurchasable}
                         onClick={() => addToCart(product.id, { checkout: true })}
                         type="button"
                       >
                         {!product.isPurchasable ? "Preview only" : product.isFree ? "Get free" : "Buy now"}
                       </button>
-                      <button className="border border-[#151515] px-3 py-2 text-sm font-bold uppercase transition hover:bg-[#f2efe7]" onClick={() => setSelectedProduct(product)} type="button">
+                      <button
+                        className="border border-[#151515] px-3 py-2 text-sm font-bold uppercase transition hover:bg-[#f2efe7]"
+                        data-analytics="product_preview"
+                        data-analytics-label={product.title}
+                        onClick={() => setSelectedProduct(product)}
+                        type="button"
+                      >
                         Preview
                       </button>
                     </div>
@@ -1162,10 +1180,13 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                 <div className="mt-2 flex flex-wrap gap-2">
                   {storeFilters.map((filter) => (
                     <button
-                      className={`border px-3 py-2 text-xs font-bold uppercase transition ${
-                        storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
-                      }`}
-                      key={filter}
+                    className={`border px-3 py-2 text-xs font-bold uppercase transition ${
+                      storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
+                    }`}
+                    aria-pressed={storeFilter === filter}
+                    data-analytics="store_filter"
+                    data-analytics-label={filter}
+                    key={filter}
                       onClick={() => setStoreFilter(filter)}
                       type="button"
                     >
@@ -1207,13 +1228,15 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <button
                     className="bg-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                    data-analytics="product_buy"
+                    data-analytics-label={selectedProduct.title}
                     disabled={!selectedProduct.isPurchasable}
                     onClick={() => addToCart(selectedProduct.id, { checkout: true })}
                     type="button"
                   >
                     {!selectedProduct.isPurchasable ? "Preview only" : selectedProduct.isFree ? "Get free" : "Buy now"}
                   </button>
-                  <Link className="border border-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-[#151515] transition hover:bg-[#f5f0e7]" href={`/products/${selectedProduct.slug}`}>
+                  <Link className="border border-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-[#151515] transition hover:bg-[#f5f0e7]" data-analytics="product_detail" data-analytics-label={selectedProduct.title} href={`/products/${selectedProduct.slug}`}>
                     View detail
                   </Link>
                 </div>
@@ -1223,6 +1246,20 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
           </div>
         </div>
       </section>
+      <footer className="border-t border-[#151515] bg-[#151515] px-4 py-8 text-white sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 text-xs font-bold uppercase tracking-[0.14em]">
+          <Link className="text-[#78dcca]" href="/">808bytes</Link>
+          <Link className="text-[#d9d4c8] transition hover:text-white" href="/about">About</Link>
+          {policyLinks.map((link) => (
+            <Link className="text-[#d9d4c8] transition hover:text-white" href={link.href} key={link.href}>
+              {link.label}
+            </Link>
+          ))}
+          <a className="text-[#d9d4c8] underline decoration-[#78dcca] underline-offset-4 transition hover:text-white" data-analytics="support_email" href="mailto:help@808bytes.com">
+            help@808bytes.com
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }

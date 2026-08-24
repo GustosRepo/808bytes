@@ -348,6 +348,7 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
 
               <button
                 className="mt-4 w-full bg-[#151515] px-4 py-3 text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-60"
+                data-analytics={(cartQuote?.hasPaidItems ?? cartRows.some((row) => !row.product.isFree)) ? "checkout_start" : "free_checkout_start"}
                 disabled={cartRows.length === 0 || hasUnavailableItems || isCheckingOut}
                 onClick={startCheckout}
                 type="button"

@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AddToCartCta from "@/components/add-to-cart-cta";
 import { DawButtonLink, DawMenuBar } from "@/components/daw-chrome";
 import ProductCover from "@/components/product-cover";
 import { getStorefrontProductBySlug } from "@/lib/commerce";
+import { siteConfig } from "@/lib/site-content";
 import { categories, type Product } from "@/lib/store-data";
 
 type ProductPageProps = {
@@ -16,6 +18,54 @@ const formatPrice = (product: Product) => {
 
   return product.isFree ? "FREE" : `$${product.price}`;
 };
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getStorefrontProductBySlug(slug);
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = product.title;
+  const description = product.longDescription;
+  const url = `/products/${product.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url,
+      siteName: siteConfig.name,
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: `${product.title} by 808bytes`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/opengraph-image"],
+    },
+  };
+}
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
@@ -120,7 +170,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   ))}
                 </div>
 
-                <AddToCartCta isFree={product.isFree} isPurchasable={product.isPurchasable} productId={product.id} statusLabel={product.statusLabel} />
+                <AddToCartCta isFree={product.isFree} isPurchasable={product.isPurchasable} productId={product.id} productTitle={product.title} statusLabel={product.statusLabel} />
                 <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
                   {product.isPurchasable
                     ? "Opens checkout with this item ready for delivery."
