@@ -21,6 +21,13 @@ const typeLabel: Record<Product["type"], string> = {
   merch: "Merch",
 };
 
+const typeBadgeLabel: Record<Product["type"], string> = {
+  vst: "Plugins",
+  pack: "Packs",
+  oneshot: "One-shots",
+  merch: "Merch",
+};
+
 const storeFilters = ["all", "vst", "pack", "oneshot", "merch"] as const;
 
 const banks = [
@@ -203,13 +210,22 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
   const activeStepCount = activeSteps.length;
   const activeMelodyNotes = useMemo(() => orderedNotes.filter((note) => activeKeys.includes(note)), [activeKeys]);
 
-  const filteredProducts = useMemo(
-    () => (storeFilter === "all" ? products : products.filter((product) => product.type === storeFilter)),
-    [products, storeFilter],
-  );
-
   const selectedCategory = categories.find((category) => category.id === selectedProduct.categoryId);
   const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
+  const availableStoreFilters = useMemo(
+    () => storeFilters.filter((filter) => filter === "all" || products.some((product) => product.type === filter)),
+    [products],
+  );
+  const effectiveStoreFilter = availableStoreFilters.includes(storeFilter) ? storeFilter : "all";
+  const filteredProducts = useMemo(
+    () => (effectiveStoreFilter === "all" ? products : products.filter((product) => product.type === effectiveStoreFilter)),
+    [effectiveStoreFilter, products],
+  );
+  const visibleProductTypeLabels = useMemo(
+    () => availableStoreFilters.filter((filter): filter is Product["type"] => filter !== "all").map((filter) => typeBadgeLabel[filter]),
+    [availableStoreFilters],
+  );
+  const hasFreeProducts = useMemo(() => products.some((product) => product.isFree), [products]);
 
   useEffect(() => {
     const syncCart = () => {
@@ -722,22 +738,22 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
     <main className="min-h-screen bg-[#f2efe7] text-[#151515]">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-[#f7f3ea]/92 backdrop-blur-xl">
         <nav className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link className="[font-family:var(--font-heading)] text-2xl font-bold tracking-normal" href="/">
+          <Link className="inline-flex min-h-11 items-center [font-family:var(--font-heading)] text-2xl font-bold tracking-normal" href="/">
             808bytes
           </Link>
           <div className="hidden items-center gap-6 text-sm font-semibold text-[#4f504d] md:flex">
-            <a className="transition hover:text-black" href="#instrument">
+            <a className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="#instrument">
               Workstation
             </a>
-            <a className="transition hover:text-black" href="#store">
+            <a className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="#store">
               Store
             </a>
-            <Link className="transition hover:text-black" href="/about">
+            <Link className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="/about">
               About
             </Link>
           </div>
           <a
-            className="ml-auto whitespace-nowrap border border-[#151515] bg-[#151515] px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-[#2a2a2a] sm:px-4 sm:text-sm"
+            className="ml-auto inline-flex min-h-11 items-center whitespace-nowrap border border-[#151515] bg-[#151515] px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-[#2a2a2a] sm:px-4 sm:text-sm"
             data-analytics="nav_shop_sounds"
             href="#store"
           >
@@ -762,7 +778,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
               <span className="block text-[#3b3b38]">workstation</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#595a55] sm:text-lg">
-              Browse drops like you are sketching a beat. Tap pads, switch banks, then scroll into a cleaner store built for plugins, packs, one-shots, and merch.
+              Browse drops like you are sketching a beat. Tap pads, switch banks, then scroll into a cleaner store built around the current Sauce catalog.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a className="bg-[#151515] px-5 py-3 text-sm font-bold uppercase text-white transition hover:bg-[#30302d]" data-analytics="hero_enter_store" href="#store">
@@ -778,7 +794,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
             <div className="absolute -top-5 right-8 hidden h-10 w-32 border border-[#151515]/20 bg-[#78dcca] lg:block" />
             <div className="relative min-w-0 max-w-full border border-[#151515] bg-[#e4dfd2] p-2 shadow-[6px_6px_0_#151515] sm:p-4 sm:shadow-[12px_12px_0_#151515]">
               <div className="grid min-w-0 gap-3 border border-[#151515] bg-[#d8d1c1] p-3 sm:p-4">
-                <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
                   <section className="min-w-0 border border-[#151515] bg-[#101113] p-3 text-white">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-xs font-bold uppercase text-[#8d918c]">808bytes OS</span>
@@ -841,7 +857,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         </button>
                       ))}
                     </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="mt-2 grid grid-cols-2 gap-2">
                       {macroDefinitions.map((macro) => {
                         const value = macroValues[macro.id];
 
@@ -869,10 +885,10 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                           </button>
                           <p className="mt-1 text-[0.62rem] font-bold uppercase text-[#5d5a52]">{macro.label}</p>
                           <p className="text-[0.58rem] font-bold uppercase text-[#7b766a]">{Math.round(value * 100)}%</p>
-                          <div className="mx-auto mt-1 grid max-w-20 grid-cols-2 gap-1">
+                          <div className="mx-auto mt-1 grid w-24 max-w-full grid-cols-2 gap-1">
                             <button
                               aria-label={`Decrease ${macro.label} macro`}
-                              className="h-8 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                              className="min-h-11 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                               onClick={() => updateMacro(macro.id, value - 0.08)}
                               type="button"
                             >
@@ -880,7 +896,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                             </button>
                             <button
                               aria-label={`Increase ${macro.label} macro`}
-                              className="h-8 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                              className="min-h-11 border border-[#151515] bg-[#eee7d8] text-xs font-bold text-[#151515] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                               onClick={() => updateMacro(macro.id, value + 0.08)}
                               type="button"
                             >
@@ -901,7 +917,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs font-bold uppercase text-[#55524b]">{activeStepCount}/16 active</p>
                         <button
-                          className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
+                          className="min-h-11 border border-[#151515] bg-[#eee7d8] px-3 py-2 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#151515]"
                           onClick={resetActivePattern}
                           type="button"
                         >
@@ -985,15 +1001,44 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-xs font-bold uppercase text-[#55524b]">Mini keys</p>
                     <button
-                      className="border border-[#151515] bg-[#eee7d8] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                      className="min-h-11 border border-[#151515] bg-[#eee7d8] px-3 py-2 text-[0.62rem] font-bold uppercase text-[#151515] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                       onClick={toggleKeyPlayback}
                       type="button"
                     >
                       {isKeyPlaying ? "Stop keys" : `${activeMelodyNotes.length} key loop`}
                     </button>
                   </div>
-                  <div className="-mx-1 max-w-full overflow-x-auto px-1 pb-1">
-                    <div className="relative h-32 w-[560px] max-w-none border border-[#151515] bg-[#151515] p-1 sm:h-28 sm:w-full">
+                  <div className="grid grid-cols-4 gap-2 sm:hidden">
+                    {orderedNotes.map((note, index) => {
+                      const isActive = activeKeys.includes(note);
+
+                      return (
+                        <button
+                          aria-label={`Toggle key ${note}`}
+                          aria-pressed={isActive}
+                          className="min-h-12 border border-[#151515] text-xs font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
+                          key={`mobile-${note}`}
+                          onClick={() => {
+                            toggleKey(note);
+                            const product = featuredProducts[index % featuredProducts.length] ?? products[index % products.length];
+                            if (product) {
+                              setSelectedProduct(product);
+                            }
+                          }}
+                          style={{
+                            backgroundColor: activeMelodyNotes[currentKeyIndex] === note && isKeyPlaying ? "#151515" : isActive ? activeBankData.color : "#fff9ea",
+                            color: activeMelodyNotes[currentKeyIndex] === note && isKeyPlaying ? "#fff9ea" : "#151515",
+                            boxShadow: isActive ? "inset 0 -6px 0 rgba(21,21,21,0.18)" : "inset 0 -4px 0 rgba(21,21,21,0.08)",
+                          }}
+                          type="button"
+                        >
+                          {note}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden max-w-full sm:block">
+                    <div className="relative h-28 w-full border border-[#151515] bg-[#151515] p-1">
                     <div className="flex h-full gap-1">
                       {whiteKeys.map((note, index) => {
                         const isActive = activeKeys.includes(note);
@@ -1002,7 +1047,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                           <button
                             aria-label={`Toggle key ${note}`}
                             aria-pressed={isActive}
-                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-xs font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:text-[0.62rem]"
+                            className="relative flex min-w-0 flex-1 items-end justify-center border border-[#151515] pb-2 text-[0.62rem] font-bold uppercase transition hover:bg-white focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                             key={note}
                             onClick={() => {
                               toggleKey(note);
@@ -1030,7 +1075,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         <button
                           aria-label={`Toggle key ${keyData.note}`}
                           aria-pressed={isActive}
-                          className="absolute top-1 z-10 h-20 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515] sm:h-16"
+                          className="absolute top-1 z-10 h-16 w-[7.4%] border border-[#151515] text-[0] shadow-[0_4px_0_rgba(0,0,0,0.24)] transition hover:translate-y-0.5 focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#151515]"
                           key={keyData.note}
                           onClick={() => {
                             toggleKey(keyData.note);
@@ -1072,11 +1117,10 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
 
       <section className="border-y border-[#151515] bg-[#151515] px-4 py-3 text-white sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-2 text-xs font-bold uppercase tracking-[0.16em] text-[#d9d4c8]">
-          <span>Plugins</span>
-          <span>Packs</span>
-          <span>One-shots</span>
-          <span>Merch</span>
-          <span className="text-[#78dcca]">Free downloads included</span>
+          {visibleProductTypeLabels.map((label) => (
+            <span key={label}>{label}</span>
+          ))}
+          <span className="text-[#78dcca]">{hasFreeProducts ? "Free downloads included" : "Digital downloads ready"}</span>
         </div>
       </section>
 
@@ -1095,12 +1139,12 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
 
             <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               <div className="flex flex-wrap items-center gap-2 lg:hidden">
-                {storeFilters.map((filter) => (
+                {availableStoreFilters.map((filter) => (
                   <button
-                    className={`border px-4 py-2 text-sm font-bold uppercase transition ${
-                      storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
+                    className={`min-h-11 border px-4 py-3 text-sm font-bold uppercase transition ${
+                      effectiveStoreFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
                     }`}
-                    aria-pressed={storeFilter === filter}
+                    aria-pressed={effectiveStoreFilter === filter}
                     data-analytics="store_filter"
                     data-analytics-label={filter}
                     key={filter}
@@ -1113,7 +1157,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
               </div>
               <Link
                 aria-label={`Open checkout with ${cartCount} items`}
-                className="relative inline-flex h-10 w-10 items-center justify-center border border-[#151515] bg-white text-[#151515] transition hover:bg-[#f5f0e7]"
+                className="relative inline-flex h-11 w-11 items-center justify-center border border-[#151515] bg-white text-[#151515] transition hover:bg-[#f5f0e7]"
                 data-analytics="store_cart_open"
                 href="/checkout"
               >
@@ -1150,7 +1194,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                     </button>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <button
-                        className="bg-[#151515] px-3 py-2 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="min-h-11 bg-[#151515] px-3 py-3 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
                         data-analytics="product_buy"
                         data-analytics-label={product.title}
                         disabled={!product.isPurchasable}
@@ -1160,7 +1204,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                         {!product.isPurchasable ? "Preview only" : product.isFree ? "Get free" : "Buy now"}
                       </button>
                       <button
-                        className="border border-[#151515] px-3 py-2 text-sm font-bold uppercase transition hover:bg-[#f2efe7]"
+                        className="min-h-11 border border-[#151515] px-3 py-3 text-sm font-bold uppercase transition hover:bg-[#f2efe7]"
                         data-analytics="product_preview"
                         data-analytics-label={product.title}
                         onClick={() => setSelectedProduct(product)}
@@ -1178,12 +1222,12 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
               <div className="mb-3 hidden border border-[#151515] bg-white p-3 lg:block">
                 <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-[#6f6a5e]">Filter catalog</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {storeFilters.map((filter) => (
+                  {availableStoreFilters.map((filter) => (
                     <button
-                    className={`border px-3 py-2 text-xs font-bold uppercase transition ${
-                      storeFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
+                    className={`min-h-11 border px-3 py-3 text-xs font-bold uppercase transition ${
+                      effectiveStoreFilter === filter ? "border-[#151515] bg-[#151515] text-white" : "border-[#d2cabb] bg-white text-[#34342f] hover:border-[#151515]"
                     }`}
-                    aria-pressed={storeFilter === filter}
+                    aria-pressed={effectiveStoreFilter === filter}
                     data-analytics="store_filter"
                     data-analytics-label={filter}
                     key={filter}
@@ -1227,7 +1271,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <button
-                    className="bg-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-11 bg-[#151515] px-3 py-3 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"
                     data-analytics="product_buy"
                     data-analytics-label={selectedProduct.title}
                     disabled={!selectedProduct.isPurchasable}
@@ -1236,7 +1280,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
                   >
                     {!selectedProduct.isPurchasable ? "Preview only" : selectedProduct.isFree ? "Get free" : "Buy now"}
                   </button>
-                  <Link className="border border-[#151515] px-3 py-2.5 text-center text-sm font-bold uppercase text-[#151515] transition hover:bg-[#f5f0e7]" data-analytics="product_detail" data-analytics-label={selectedProduct.title} href={`/products/${selectedProduct.slug}`}>
+                  <Link className="min-h-11 border border-[#151515] px-3 py-3 text-center text-sm font-bold uppercase text-[#151515] transition hover:bg-[#f5f0e7]" data-analytics="product_detail" data-analytics-label={selectedProduct.title} href={`/products/${selectedProduct.slug}`}>
                     View detail
                   </Link>
                 </div>
@@ -1248,14 +1292,14 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
       </section>
       <footer className="border-t border-[#151515] bg-[#151515] px-4 py-8 text-white sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 text-xs font-bold uppercase tracking-[0.14em]">
-          <Link className="text-[#78dcca]" href="/">808bytes</Link>
-          <Link className="text-[#d9d4c8] transition hover:text-white" href="/about">About</Link>
+          <Link className="inline-flex min-h-11 items-center text-[#78dcca]" href="/">808bytes</Link>
+          <Link className="inline-flex min-h-11 items-center text-[#d9d4c8] transition hover:text-white" href="/about">About</Link>
           {policyLinks.map((link) => (
-            <Link className="text-[#d9d4c8] transition hover:text-white" href={link.href} key={link.href}>
+            <Link className="inline-flex min-h-11 items-center text-[#d9d4c8] transition hover:text-white" href={link.href} key={link.href}>
               {link.label}
             </Link>
           ))}
-          <a className="text-[#d9d4c8] underline decoration-[#78dcca] underline-offset-4 transition hover:text-white" data-analytics="support_email" href="mailto:help@808bytes.com">
+          <a className="inline-flex min-h-11 items-center text-[#d9d4c8] underline decoration-[#78dcca] underline-offset-4 transition hover:text-white" data-analytics="support_email" href="mailto:help@808bytes.com">
             help@808bytes.com
           </a>
         </div>

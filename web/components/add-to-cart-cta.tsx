@@ -31,7 +31,7 @@ export default function AddToCartCta({ productId, productTitle, isFree, isPurcha
   return (
     <>
       <button
-        className="mt-5 w-full border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-2 text-sm font-bold uppercase text-[var(--commerce-text)] transition hover:bg-[var(--commerce-hover)] disabled:cursor-not-allowed disabled:border-[#4a4c50] disabled:bg-[#2a2c2f] disabled:text-[#aaa69e]"
+        className="mt-5 min-h-11 w-full border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-3 text-sm font-bold uppercase text-[var(--commerce-text)] transition hover:bg-[var(--commerce-hover)] disabled:cursor-not-allowed disabled:border-[#4a4c50] disabled:bg-[#2a2c2f] disabled:text-[#aaa69e]"
         data-analytics="product_buy"
         data-analytics-label={productTitle}
         disabled={!isPurchasable}

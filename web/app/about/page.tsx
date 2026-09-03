@@ -50,7 +50,7 @@ const browserRows = ["ABOUT_808BYTES.flp", "Session notes", "Release log", "Free
 const renderTrackVisual = (track: (typeof sessionTracks)[number]) => {
   if (track.visual === "steps") {
     return (
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid min-w-0 grid-cols-8 gap-1">
         {Array.from({ length: 24 }).map((_, index) => (
           <span
             aria-hidden="true"
@@ -68,7 +68,7 @@ const renderTrackVisual = (track: (typeof sessionTracks)[number]) => {
 
   if (track.visual === "plugin") {
     return (
-      <div className="grid grid-cols-[1fr_auto] gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
         <div className="border border-[#3d3f43] bg-[#151619] p-3">
           <p className="text-[0.62rem] uppercase text-[#9b978e]">Macro rack</p>
           <div className="mt-3 grid grid-cols-4 gap-2">
@@ -101,11 +101,11 @@ const renderTrackVisual = (track: (typeof sessionTracks)[number]) => {
 
   if (track.visual === "meters") {
     return (
-      <div className="flex h-28 items-end gap-2 border border-[#3d3f43] bg-[#151619] px-4 py-3">
+      <div className="flex h-28 min-w-0 items-end gap-1 overflow-hidden border border-[#3d3f43] bg-[#151619] px-4 py-3 sm:gap-2">
         {Array.from({ length: 28 }).map((_, index) => (
           <span
             aria-hidden="true"
-            className="w-2 rounded-sm"
+            className="min-w-0 flex-1 rounded-sm"
             key={`${track.number}-meter-${index}`}
             style={{
               height: 14 + ((index * 11 + 9) % 82),
@@ -119,11 +119,11 @@ const renderTrackVisual = (track: (typeof sessionTracks)[number]) => {
   }
 
   return (
-    <div className="flex h-28 items-center gap-1 overflow-hidden border border-[#3d3f43] bg-[#151619] px-4">
+    <div className="flex h-28 min-w-0 items-center gap-1 overflow-hidden border border-[#3d3f43] bg-[#151619] px-4">
       {Array.from({ length: 42 }).map((_, index) => (
         <span
           aria-hidden="true"
-          className="w-2 rounded-sm"
+          className="min-w-0 flex-1 rounded-sm"
           key={`${track.number}-wave-${index}`}
           style={{
             height: 22 + ((index * 13 + Number(track.number) * 7) % 78),
@@ -152,13 +152,13 @@ export default function AboutPage() {
             ]}
           />
 
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 px-3 py-2">
             <DawButtonLink href="/">Back to playlist</DawButtonLink>
-            <div className="grid grid-cols-[auto_auto] overflow-hidden border border-[#4a4c50] bg-[#1b1d20] text-[0.68rem]">
+            <div className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden border border-[#4a4c50] bg-[#1b1d20] text-[0.68rem]">
               <span className="border-r border-[#383b3f] px-2 py-1 text-[#9a9890]">PROJECT</span>
-              <span className="px-3 py-1 font-semibold text-[var(--accent-cyan)]">ABOUT_808BYTES.flp</span>
+              <span className="min-w-0 break-all px-3 py-1 font-semibold text-[var(--accent-cyan)]">ABOUT_808BYTES.flp</span>
               <span className="border-t border-r border-[#383b3f] px-2 py-1 text-[#9a9890]">MODE</span>
-              <span className="border-t border-[#383b3f] px-3 py-1 font-semibold">SESSION NOTES</span>
+              <span className="min-w-0 border-t border-[#383b3f] px-3 py-1 font-semibold">SESSION NOTES</span>
             </div>
             <DawMeter bars={24} className="min-w-[170px]" label="ABOUT BUS" />
           </div>
@@ -179,7 +179,7 @@ export default function AboutPage() {
                   className="flex items-center justify-between border-x border-b border-[#2d3034] bg-[#17191c] px-3 py-1.5 text-[0.76rem] font-semibold text-[#ddd6c8]"
                   key={row}
                 >
-                  <span>{row}</span>
+                  <span className="min-w-0 break-words">{row}</span>
                   <span className="h-2 w-5" style={{ backgroundColor: sessionTracks[index - 1]?.accent ?? "var(--accent-cyan)" }} />
                 </div>
               ))}
@@ -194,19 +194,19 @@ export default function AboutPage() {
                   "repeating-linear-gradient(90deg, rgba(132,130,120,0.14) 0, rgba(132,130,120,0.14) 1px, transparent 1px, transparent 54px), repeating-linear-gradient(180deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 36px), #121315",
               }}
             >
-              <div className="absolute inset-x-0 top-0 grid grid-cols-[clamp(120px,13vw,168px)_repeat(12,minmax(36px,1fr))] border-b border-[#34363a] bg-[#1c1e21] text-[0.65rem] text-[#9b978e]">
-                <span className="border-r border-[#34363a] px-3 py-1.5 uppercase">Arrangement</span>
+              <div className="absolute inset-x-0 top-0 grid grid-cols-[minmax(88px,108px)_repeat(12,minmax(18px,1fr))] border-b border-[#34363a] bg-[#1c1e21] text-[0.6rem] text-[#9b978e] sm:grid-cols-[clamp(120px,13vw,168px)_repeat(12,minmax(36px,1fr))] sm:text-[0.65rem]">
+                <span className="min-w-0 border-r border-[#34363a] px-2 py-1.5 uppercase sm:px-3">Arrangement</span>
                 {Array.from({ length: 12 }).map((_, index) => (
-                  <span className="border-r border-[#34363a] px-2 py-1.5" key={`about-bar-${index}`}>
+                  <span className="min-w-0 border-r border-[#34363a] px-1 py-1.5 sm:px-2" key={`about-bar-${index}`}>
                     {index + 1}
                   </span>
                 ))}
               </div>
 
               <div className="relative z-10 grid min-h-[min(620px,calc(100vh-92px))] content-center gap-5 px-4 pt-14 pb-8 md:px-8">
-                <div className="max-w-4xl">
+                <div className="min-w-0 max-w-4xl">
                   <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--accent-cyan)]">Session loaded</p>
-                  <h1 className="mt-2 text-5xl font-bold leading-[0.92] [font-family:var(--font-heading)] sm:text-7xl lg:text-8xl">
+                  <h1 className="mt-2 break-all text-4xl font-bold leading-[0.92] [font-family:var(--font-heading)] sm:break-normal sm:text-7xl lg:text-8xl">
                     ABOUT_808BYTES.flp
                   </h1>
                   <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#cbc5ba] md:text-lg">
@@ -220,11 +220,11 @@ export default function AboutPage() {
                       <span className="text-[0.67rem] uppercase text-[#96938b]">Session notes</span>
                       <span className="text-[0.67rem] text-[var(--accent-amber)]">130 BPM</span>
                     </div>
-                    <div className="mt-3 grid gap-2 text-sm text-[#cbc5ba] sm:grid-cols-2">
+                    <div className="mt-3 grid min-w-0 gap-2 text-sm text-[#cbc5ba] sm:grid-cols-2">
                       <span>Purpose: make browsing feel like producing.</span>
                       <span>Format: clips, inserts, tracks, and meters.</span>
-                      <span>Rule: abstract is fine when the interface stays readable.</span>
-                      <span>Output: tools and sounds that do not waste the session.</span>
+                      <span className="min-w-0 break-words">Rule: abstract is fine when the interface stays readable.</span>
+                      <span className="min-w-0 break-words">Output: tools and sounds that do not waste the session.</span>
                     </div>
                   </div>
 
@@ -260,14 +260,14 @@ export default function AboutPage() {
                   </aside>
 
                   <div
-                    className="grid gap-4 p-4 md:grid-cols-[minmax(0,0.9fr)_minmax(280px,1.1fr)] md:p-5"
+                    className="grid min-w-0 gap-4 p-4 md:grid-cols-[minmax(0,0.9fr)_minmax(280px,1.1fr)] md:p-5"
                     style={{
                       background:
                         "repeating-linear-gradient(90deg, rgba(132,130,120,0.11) 0, rgba(132,130,120,0.11) 1px, transparent 1px, transparent 54px), #181a1d",
                     }}
                   >
-                    <div className="self-center">
-                      <p className="max-w-xl text-base leading-relaxed text-[#d8d2c6]">{track.body}</p>
+                    <div className="min-w-0 self-center">
+                      <p className="max-w-xl break-words text-base leading-relaxed text-[#d8d2c6]">{track.body}</p>
                       <div className="mt-4 flex flex-wrap gap-2">
                         {["session", "sound", "workflow"].map((tag) => (
                           <span className="border border-[#3d3f43] bg-[#151619] px-2 py-1 text-[0.64rem] font-semibold uppercase text-[#aaa59b]" key={`${track.number}-${tag}`}>
@@ -277,7 +277,7 @@ export default function AboutPage() {
                       </div>
                     </div>
 
-                    <div className="self-center">{renderTrackVisual(track)}</div>
+                    <div className="min-w-0 self-center overflow-hidden">{renderTrackVisual(track)}</div>
                   </div>
                 </article>
               ))}
@@ -295,7 +295,7 @@ export default function AboutPage() {
               <div className="border border-[#3d3f43] bg-[#101113] p-4">
                 <p className="text-[0.67rem] uppercase text-[#96938b]">Output</p>
                 <Link
-                  className="mt-3 block border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-2 text-center text-sm font-bold uppercase text-[var(--commerce-text)] transition hover:bg-[var(--commerce-hover)]"
+                  className="mt-3 block min-h-11 border border-[var(--commerce)] bg-[var(--commerce)] px-3 py-3 text-center text-sm font-bold uppercase text-[var(--commerce-text)] transition hover:bg-[var(--commerce-hover)]"
                   href="/"
                 >
                   Return to playlist

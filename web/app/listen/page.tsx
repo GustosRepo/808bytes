@@ -42,7 +42,7 @@ export default function ListenPage() {
 
         <div className="mt-8">
           <div className="relative aspect-square overflow-hidden rounded-[26px] border border-white/10 bg-[#141414] shadow-[0_28px_80px_rgba(0,0,0,0.62)]">
-            <Image alt={`${songPromo.title} cover art`} className="object-cover" fill priority src={songPromo.coverArt} />
+            <Image alt={`${songPromo.title} cover art`} className="object-cover" fill priority sizes="(max-width: 640px) calc(100vw - 2rem), 448px" src={songPromo.coverArt} />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-5">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#1db954]">{songPromo.artist}</p>
               <h1 className="mt-2 text-5xl font-black leading-[0.9] tracking-normal [font-family:var(--font-heading)]">

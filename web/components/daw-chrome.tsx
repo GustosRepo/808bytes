@@ -18,25 +18,25 @@ type DawMeterProps = {
 };
 
 export const dawButtonClass =
-  "border border-[#4a4c50] bg-[#24262a] px-2.5 py-1 text-[0.68rem] font-semibold uppercase text-[var(--text)] transition hover:border-[#6a6d72] hover:bg-[#303236]";
+  "inline-flex min-h-11 items-center border border-[#4a4c50] bg-[#24262a] px-3 py-2 text-[0.68rem] font-semibold uppercase text-[var(--text)] transition hover:border-[#6a6d72] hover:bg-[#303236]";
 
 export function DawMenuBar({ items, activeLabel }: DawMenuBarProps) {
   return (
-    <div className="flex min-h-7 flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#2a2d31] bg-[#0b0c0e] px-3 text-[0.66rem] uppercase text-[#aaa69e]">
-      <Link className="[font-family:var(--font-heading)] text-sm font-bold text-[#eee8dc] transition hover:text-[var(--accent-cyan)]" href="/">
+    <div className="flex min-h-11 flex-wrap items-center gap-x-2 gap-y-1 border-b border-[#2a2d31] bg-[#0b0c0e] px-3 text-[0.66rem] uppercase text-[#aaa69e]">
+      <Link className="inline-flex min-h-11 items-center px-1 [font-family:var(--font-heading)] text-sm font-bold text-[#eee8dc] transition hover:text-[var(--accent-cyan)]" href="/">
         808bytes
       </Link>
       {items.map((item) =>
         item.href ? (
           <Link
-            className={`transition hover:text-[var(--accent-cyan)] ${activeLabel === item.label ? "text-[var(--accent-cyan)]" : ""}`}
+            className={`inline-flex min-h-11 items-center px-2.5 transition hover:text-[var(--accent-cyan)] ${activeLabel === item.label ? "text-[var(--accent-cyan)]" : ""}`}
             href={item.href}
             key={item.label}
           >
             {item.label}
           </Link>
         ) : (
-          <span className={activeLabel === item.label ? "text-[var(--accent-cyan)]" : ""} key={item.label}>
+          <span className={`inline-flex min-h-11 items-center px-1 ${activeLabel === item.label ? "text-[var(--accent-cyan)]" : ""}`} key={item.label}>
             {item.label}
           </span>
         ),

@@ -221,16 +221,16 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_86%_4%,#f8f5ee_0,#efe9dd_42%,#e7dfd0_100%)] px-4 py-10 text-[#151515] sm:px-6">
       <div className="mx-auto mb-5 flex max-w-6xl flex-wrap items-center gap-3 border border-[#151515] bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.14em]">
-        <Link className="text-[#151515]" href="/">
+        <Link className="inline-flex min-h-11 items-center text-[#151515]" href="/">
           808bytes
         </Link>
         <span className="text-[#8a8376]">/</span>
-        <Link className="text-[#6f6a5e] transition hover:text-[#151515]" href="/#store">
+        <Link className="inline-flex min-h-11 items-center text-[#6f6a5e] transition hover:text-[#151515]" href="/#store">
           Store
         </Link>
         <span className="text-[#8a8376]">/</span>
         <span className="text-[#151515]">Secure checkout</span>
-        <Link className="ml-auto border border-[#151515] px-2 py-1 text-[0.62rem] text-[#151515] transition hover:bg-[#f5f0e7]" href="/cart">
+        <Link className="ml-auto inline-flex min-h-11 items-center border border-[#151515] px-3 py-2 text-[0.62rem] text-[#151515] transition hover:bg-[#f5f0e7]" href="/cart">
           Edit cart
         </Link>
       </div>
@@ -255,7 +255,7 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
               {cartRows.length === 0 ? (
                 <div className="border border-[#d8d0c0] bg-[#fbfaf6] p-4">
                   <p className="text-sm text-[#5c5b57]">No items are ready for checkout yet. Add a product from the store first.</p>
-                  <Link className="mt-3 inline-block border border-[#151515] px-3 py-2 text-xs font-bold uppercase" href="/#store">
+                  <Link className="mt-3 inline-flex min-h-11 items-center border border-[#151515] px-3 py-2 text-xs font-bold uppercase" href="/#store">
                     Browse products
                   </Link>
                 </div>
@@ -272,11 +272,11 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
                       ) : null}
                     </div>
                     <div className="flex items-center justify-between gap-2 sm:justify-start">
-                      <button className="h-8 w-8 border border-[#151515] text-sm font-bold" onClick={() => updateQuantity(row.productId, row.quantity - 1)} type="button">
+                      <button className="h-11 w-11 border border-[#151515] text-sm font-bold" onClick={() => updateQuantity(row.productId, row.quantity - 1)} type="button">
                         -
                       </button>
                       <span className="w-8 text-center text-sm font-bold">{row.quantity}</span>
-                      <button className="h-8 w-8 border border-[#151515] text-sm font-bold" onClick={() => updateQuantity(row.productId, row.quantity + 1)} type="button">
+                      <button className="h-11 w-11 border border-[#151515] text-sm font-bold" onClick={() => updateQuantity(row.productId, row.quantity + 1)} type="button">
                         +
                       </button>
                     </div>
@@ -290,7 +290,7 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6f6a5e]">Delivery contact</p>
               <div className="mt-3 grid gap-2">
                 <input
-                  className="border border-[#151515] bg-white px-3 py-2 text-sm text-[#151515] outline-none focus:border-[#b34b44]"
+                  className="min-h-11 border border-[#151515] bg-white px-3 py-2 text-sm text-[#151515] outline-none focus:border-[#b34b44]"
                   onChange={(event) => setCheckoutEmail(event.target.value)}
                   placeholder="Email for order updates"
                   type="email"
@@ -339,7 +339,7 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
                 <p className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-[#6f6a5e]">Accepted methods</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {acceptedPayments.map((method) => (
-                    <span className="border border-[#d8d0c0] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#4f4c45]" key={method}>
+                    <span className="inline-flex min-h-8 items-center border border-[#d8d0c0] px-2 py-1 text-[0.62rem] font-bold uppercase text-[#4f4c45]" key={method}>
                       {method}
                     </span>
                   ))}
@@ -381,13 +381,13 @@ export default function CheckoutClient({ products }: CheckoutClientProps) {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link className="border border-[#151515] px-4 py-2 text-xs font-bold uppercase" href="/cart">
+              <Link className="inline-flex min-h-11 items-center border border-[#151515] px-4 py-3 text-xs font-bold uppercase" href="/cart">
                 Edit cart
               </Link>
-              <button className="border border-[#151515] px-4 py-2 text-xs font-bold uppercase" onClick={clearCart} type="button">
+              <button className="min-h-11 border border-[#151515] px-4 py-3 text-xs font-bold uppercase" onClick={clearCart} type="button">
                 Clear cart
               </button>
-              <Link className="border border-[#151515] px-4 py-2 text-xs font-bold uppercase" href="/#store">
+              <Link className="inline-flex min-h-11 items-center border border-[#151515] px-4 py-3 text-xs font-bold uppercase" href="/#store">
                 Keep shopping
               </Link>
             </div>
