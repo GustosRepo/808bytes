@@ -1,6 +1,6 @@
 # Progress Checklist
 
-Last updated: 2026-08-24
+Last updated: 2026-11-05
 
 Tracking rule:
 - This file is the source of truth for project status.
@@ -15,6 +15,33 @@ Tracking rule:
 - Phase 4 (Commerce): in progress (Lemon Squeezy checkout/webhook verified locally via ngrok; Postgres persistence, signed download grants, live Resend receipt delivery, and order access tokens implemented)
 - Phase 5 (Content And Media): not started
 - Phase 6 (Launch Hardening): in progress (policy pages, SEO/social basics, first-party analytics hooks, hidden ad landing page, and accessibility/reduced-motion pass implemented; manual browser/device QA still pending)
+
+## Platform Expansion (all-in-one music platform)
+
+Plan and status live in two companion docs — read these first when resuming:
+
+- `docs/808bytes-platform-audit.md` — full repository audit (architecture, reuse map, risks, DB design)
+- `docs/808bytes-implementation-roadmap.md` — milestone plan with per-milestone status notes
+
+Snapshot (2026-11-05):
+
+- [x] Repository audit + roadmap (commit `41e9e80`)
+- [x] Milestone 0 — shared SiteHeader/SiteFooter extracted from home-client (workstation untouched), CI workflow added (commit `6df08e6`)
+- [x] Milestone 1 — platform nav, `/sounds` catalog index, DB-backed sitemap (commit `6df08e6`)
+- [x] Milestone 2 — numbered migrations (`web/scripts/migrations/`), migration 002 product media metadata, `AudioPreview` single-instance player, admin form fields (commit `3f7e107`)
+- [ ] Milestone 3 — Music & artist platform (`/music`, releases schema, admin Music module, `/listen` reads DB)
+- [ ] Milestone 4 — Licensing marketplace (4 sub-milestones; legal approval gate before anything is sellable)
+- [ ] Milestone 5 — Journal (rich-text CMS)
+- [ ] Milestone 6 — Labs
+- [ ] Milestone 7 — Unified admin + media library (preview/file uploads land here)
+- [ ] Milestone 8 — SEO/performance/analytics persistence
+
+Pending operational items:
+
+- [ ] Run `npm run commerce:migrate` against production before deploying Milestone 2 (admin product saves need the 002 columns; storefront reads are backward compatible and already verified)
+- [ ] Fix local Docker Desktop storage corruption (image blob I/O errors) so `npm run commerce:db:up` works again; Milestone 2 migration was verified with an in-process Postgres instead
+- [ ] Owner decisions (roadmap "Open decisions"): canonical product URL (`/products/[slug]` kept for now), Lemon Squeezy vs Stripe for licensing, analytics storage approach, nav timing for unbuilt sections
+
 
 ## Phase 1: Playable Brand Experience
 

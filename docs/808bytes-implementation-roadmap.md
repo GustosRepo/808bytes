@@ -4,6 +4,8 @@ Date: 2026-11-05
 Companion to: `docs/808bytes-platform-audit.md`
 Goal: Expand 808Bytes into Music | Licensing | Sounds | Journal | Labs while preserving the current design, workstation, and commerce pipeline.
 
+> **Status (2026-11-05): Milestones 0–2 are done** (commits `6df08e6`, `3f7e107`). **Next up: Milestone 3 — Music & artist platform.** Per-milestone status notes are inline below; operational to-dos are tracked in `docs/PROGRESS_CHECKLIST.md` under "Platform Expansion".
+
 Each milestone is a small, reviewable change set. No milestone begins until the previous one is verified (existing tests pass + manual workstation/checkout smoke check).
 
 ---

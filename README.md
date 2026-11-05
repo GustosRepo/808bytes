@@ -18,6 +18,9 @@ The homepage opens with a compact hardware-inspired workstation that visitors ca
 
 ## Documentation
 
+- [Platform audit](docs/808bytes-platform-audit.md) (2026-11)
+- [Platform implementation roadmap](docs/808bytes-implementation-roadmap.md) (2026-11, current status lives here)
+- [Progress checklist](docs/PROGRESS_CHECKLIST.md) (source of truth for status)
 - [Project brief](docs/PROJECT_BRIEF.md)
 - [Site architecture](docs/SITE_ARCHITECTURE.md)
 - [Design direction](docs/DESIGN_DIRECTION.md)
