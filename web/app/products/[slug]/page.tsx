@@ -84,6 +84,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <DawMenuBar
             items={[
               { label: "Shop", href: "/#store" },
+              { label: "Sounds", href: "/sounds" },
               { label: "Free Downloads", href: "/#store" },
               { label: "Plugins", href: "/#store" },
               { label: "Packs", href: "/#store" },

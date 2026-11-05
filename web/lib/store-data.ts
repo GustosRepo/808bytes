@@ -1,5 +1,12 @@
 export type ProductType = "vst" | "pack" | "oneshot" | "merch";
 
+export const productTypeLabels: Record<ProductType, string> = {
+  vst: "Plugin",
+  pack: "Pack",
+  oneshot: "One-shot",
+  merch: "Merch",
+};
+
 export type Category = {
   id: string;
   name: string;

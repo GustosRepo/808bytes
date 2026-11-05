@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductCover from "@/components/product-cover";
-import { policyLinks } from "@/lib/site-content";
+import SiteFooter from "@/components/site-footer";
+import SiteHeader from "@/components/site-header";
 import type { Category, Product } from "@/lib/store-data";
 import {
   CART_CHANGE_EVENT,
@@ -736,31 +737,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
 
   return (
     <main className="min-h-screen bg-[#f2efe7] text-[#151515]">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-[#f7f3ea]/92 backdrop-blur-xl">
-        <nav className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link className="inline-flex min-h-11 items-center [font-family:var(--font-heading)] text-2xl font-bold tracking-normal" href="/">
-            808bytes
-          </Link>
-          <div className="hidden items-center gap-6 text-sm font-semibold text-[#4f504d] md:flex">
-            <a className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="#instrument">
-              Workstation
-            </a>
-            <a className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="#store">
-              Store
-            </a>
-            <Link className="inline-flex min-h-11 items-center px-1 transition hover:text-black" href="/about">
-              About
-            </Link>
-          </div>
-          <a
-            className="ml-auto inline-flex min-h-11 items-center whitespace-nowrap border border-[#151515] bg-[#151515] px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-[#2a2a2a] sm:px-4 sm:text-sm"
-            data-analytics="nav_shop_sounds"
-            href="#store"
-          >
-            Shop sounds
-          </a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <section
         className="relative overflow-hidden px-4 pt-24 sm:px-6"
@@ -1290,20 +1267,7 @@ export default function HomeClient({ categories, products }: HomeClientProps) {
           </div>
         </div>
       </section>
-      <footer className="border-t border-[#151515] bg-[#151515] px-4 py-8 text-white sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 text-xs font-bold uppercase tracking-[0.14em]">
-          <Link className="inline-flex min-h-11 items-center text-[#78dcca]" href="/">808bytes</Link>
-          <Link className="inline-flex min-h-11 items-center text-[#d9d4c8] transition hover:text-white" href="/about">About</Link>
-          {policyLinks.map((link) => (
-            <Link className="inline-flex min-h-11 items-center text-[#d9d4c8] transition hover:text-white" href={link.href} key={link.href}>
-              {link.label}
-            </Link>
-          ))}
-          <a className="inline-flex min-h-11 items-center text-[#d9d4c8] underline decoration-[#78dcca] underline-offset-4 transition hover:text-white" data-analytics="support_email" href="mailto:help@808bytes.com">
-            help@808bytes.com
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

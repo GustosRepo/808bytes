@@ -10,6 +10,8 @@ Each milestone is a small, reviewable change set. No milestone begins until the 
 
 ## Milestone 0 — Foundations (prerequisite for everything)
 
+Status: **Done (2026-11-05)** — header/footer/store-grid extracted (`site-header.tsx`, `site-footer.tsx`, `sounds-catalog.tsx`); CI added (`.github/workflows/ci.yml`). Numbered migration files deferred to Milestone 2 (first real schema change); no schema changes were needed here.
+
 **Why first:** There is no shared site header/footer — navigation only exists inside the 1,309-line `home-client.tsx`. Every new section needs a shared shell.
 
 Changes:
@@ -23,6 +25,8 @@ Verification: visual parity on `/`; workstation plays; all tests pass.
 Risk: Medium (component extraction near audio code) — mitigated by leaving engine state inside the workstation component.
 
 ## Milestone 1 — Platform navigation (brief Phase 1)
+
+Status: **Done (2026-11-05)** — shared header with Workstation/Store/Sounds/About links; `/sounds` catalog index live (cards link to canonical `/products/[slug]`); Sounds added to product-page DAW menu and footer; sitemap now reads the DB-backed catalog and includes `/sounds`. Nav links for Music/Licensing/Journal/Labs ship with their sections (no placeholder pages).
 
 Changes:
 1. Shared header gains: Home | Music | Licensing | Sounds | Journal | Labs (existing styling conventions, responsive, existing anchor behavior on home preserved).
