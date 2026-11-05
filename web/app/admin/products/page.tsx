@@ -112,6 +112,26 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
               <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="compatibility" defaultValue="Digital download, ZIP" />
             </label>
             <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+              File formats
+              <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="fileFormats" placeholder="WAV, MIDI" />
+            </label>
+            <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+              Version
+              <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="version" placeholder="1.0" />
+            </label>
+            <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+              Download size
+              <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="downloadSizeLabel" placeholder="250 MB" />
+            </label>
+            <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+              Preview URL
+              <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="previewUrl" placeholder="/previews/new-sauce.mp3" />
+            </label>
+            <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e] lg:col-span-2">
+              License summary
+              <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="licenseSummary" placeholder="Royalty-free for commercial productions." />
+            </label>
+            <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
               Stock
               <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" min="0" name="stockQuantity" type="number" />
             </label>
@@ -211,6 +231,28 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
                   <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
                     Compatibility
                     <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="compatibility" defaultValue={product.compatibility.join(", ")} />
+                  </label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+                      File formats
+                      <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="fileFormats" defaultValue={product.fileFormats.join(", ")} placeholder="WAV, MIDI" />
+                    </label>
+                    <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+                      Version
+                      <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="version" defaultValue={product.version ?? ""} placeholder="1.0" />
+                    </label>
+                    <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+                      Download size
+                      <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="downloadSizeLabel" defaultValue={product.downloadSizeLabel ?? ""} placeholder="250 MB" />
+                    </label>
+                    <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+                      Preview URL
+                      <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="previewUrl" defaultValue={product.previewUrl ?? ""} placeholder="/previews/example.mp3" />
+                    </label>
+                  </div>
+                  <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">
+                    License summary
+                    <input className="border border-[#151515] px-2 py-2 text-sm normal-case text-[#151515]" name="licenseSummary" defaultValue={product.licenseSummary ?? ""} placeholder="Royalty-free for commercial productions." />
                   </label>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <label className="grid gap-1 text-xs font-bold uppercase text-[#6f6a5e]">

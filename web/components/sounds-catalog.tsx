@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import AudioPreview from "@/components/audio-preview";
 import ProductCover from "@/components/product-cover";
 import {
   CART_CHANGE_EVENT,
@@ -135,6 +136,11 @@ export default function SoundsCatalog({ categories, products }: SoundsCatalogPro
                 </div>
                 <p className="mt-3 min-h-12 text-sm leading-6 text-[#64645f]">{product.shortDescription}</p>
               </Link>
+              {product.previewUrl ? (
+                <div className="mt-3">
+                  <AudioPreview src={product.previewUrl} title={product.title} />
+                </div>
+              ) : null}
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <button
                   className="min-h-11 bg-[#151515] px-3 py-3 text-center text-sm font-bold uppercase text-white transition hover:bg-[#30302d] disabled:cursor-not-allowed disabled:opacity-50"

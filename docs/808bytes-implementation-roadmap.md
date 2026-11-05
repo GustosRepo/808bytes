@@ -39,6 +39,8 @@ Risk: Low.
 
 ## Milestone 2 — Sounds consolidation (brief Phase 4, pulled early — lowest risk, highest reuse)
 
+Status: **Done (2026-11-05)** — numbered migration runner added (`scripts/migrations/`, tracked in `schema_migrations`; inline DDL remains the 001 baseline). Migration `002_product_media_metadata.sql` adds file formats, version, download size, license summary, and preview URL (verified idempotent; `preview_url` CHECK allows only site-relative or https URLs). Single-instance `AudioPreview` player (no autoplay, cleanup on unmount) renders on `/sounds` cards and product detail pages when a preview URL is set. Admin create/edit forms expose all new fields. Preview *uploads* were deferred to the Media Library (Milestone 7); admins reference a hosted or `/public` URL for now. **Deploy note: run `npm run commerce:migrate` before shipping this milestone — admin product saves require the 002 columns.**
+
 Changes:
 1. Extend `product_inventory` with optional fields needed by the brief: file formats, version, download size, license summary, audio preview asset (migration 002; additive).
 2. Admin products module gains the new fields + preview upload via the media library's first slice (private/public prefix separation in storage).

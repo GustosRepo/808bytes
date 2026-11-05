@@ -30,6 +30,11 @@ export type Product = {
   cover: string;
   downloadKey?: string;
   compatibility: string[];
+  fileFormats?: string[];
+  version?: string;
+  downloadSizeLabel?: string;
+  licenseSummary?: string;
+  previewUrl?: string;
   featured?: boolean;
   badge?: string;
   statusLabel?: string;

@@ -58,6 +58,28 @@ const getStringList = (formData: FormData, key: string) =>
 
 const getNullableString = (formData: FormData, key: string) => getString(formData, key) || null;
 
+// Previews must be site-relative paths or https URLs (mirrors the DB CHECK).
+const getPreviewUrl = (formData: FormData) => {
+  const raw = getString(formData, "previewUrl");
+  if (!raw) {
+    return null;
+  }
+
+  if (raw.startsWith("/") || raw.startsWith("https://")) {
+    return raw;
+  }
+
+  throw new Error("Preview URL must start with / or https://.");
+};
+
+const getMediaMetadata = (formData: FormData) => ({
+  fileFormats: getStringList(formData, "fileFormats"),
+  version: getNullableString(formData, "version"),
+  downloadSizeLabel: getNullableString(formData, "downloadSizeLabel"),
+  licenseSummary: getNullableString(formData, "licenseSummary"),
+  previewUrl: getPreviewUrl(formData),
+});
+
 const getActionOrigin = async () => {
   const headerStore = await headers();
   const host = headerStore.get("host") ?? "localhost:3000";
@@ -125,6 +147,7 @@ export const updateInventoryProductAction = async (formData: FormData) => {
     cover: getString(formData, "cover") || "/covers/sauce-packet.svg",
     objectKey,
     compatibility: getStringList(formData, "compatibility"),
+    ...getMediaMetadata(formData),
     featured: getBoolean(formData, "featured"),
     badge: getNullableString(formData, "badge"),
     statusLabel: getNullableString(formData, "statusLabel"),
@@ -169,6 +192,7 @@ export const createInventoryProductAction = async (formData: FormData) => {
     cover: getString(formData, "cover") || "/covers/sauce-packet.svg",
     objectKey: getObjectKey(formData),
     compatibility: getStringList(formData, "compatibility"),
+    ...getMediaMetadata(formData),
     featured: getBoolean(formData, "featured"),
     badge: getNullableString(formData, "badge"),
     statusLabel: getNullableString(formData, "statusLabel"),

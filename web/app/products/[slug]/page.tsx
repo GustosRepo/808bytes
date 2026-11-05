@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AddToCartCta from "@/components/add-to-cart-cta";
+import AudioPreview from "@/components/audio-preview";
 import { DawButtonLink, DawMenuBar } from "@/components/daw-chrome";
 import ProductCover from "@/components/product-cover";
 import { getStorefrontProductBySlug } from "@/lib/commerce";
@@ -157,7 +158,31 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   <span>{formatPrice(product)}</span>
                   <span className="text-[var(--muted)]">Format</span>
                   <span>{product.compatibility.join(" / ")}</span>
+                  {product.fileFormats && product.fileFormats.length > 0 ? (
+                    <>
+                      <span className="text-[var(--muted)]">Files</span>
+                      <span>{product.fileFormats.join(" / ")}</span>
+                    </>
+                  ) : null}
+                  {product.version ? (
+                    <>
+                      <span className="text-[var(--muted)]">Version</span>
+                      <span>{product.version}</span>
+                    </>
+                  ) : null}
+                  {product.downloadSizeLabel ? (
+                    <>
+                      <span className="text-[var(--muted)]">Size</span>
+                      <span>{product.downloadSizeLabel}</span>
+                    </>
+                  ) : null}
                 </div>
+
+                {product.previewUrl ? (
+                  <div className="mt-4">
+                    <AudioPreview dark src={product.previewUrl} title={product.title} />
+                  </div>
+                ) : null}
 
                 <div className="mt-4 grid grid-cols-8 gap-1">
                   {Array.from({ length: 16 }).map((_, index) => (
@@ -172,6 +197,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 <AddToCartCta isFree={product.isFree} isPurchasable={product.isPurchasable} productId={product.id} productTitle={product.title} statusLabel={product.statusLabel} />
+                {product.licenseSummary ? (
+                  <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">{product.licenseSummary}</p>
+                ) : null}
                 <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
                   {product.isPurchasable
                     ? "Opens checkout with this item ready for delivery."

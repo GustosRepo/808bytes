@@ -72,6 +72,11 @@ export type ProductInventoryRecord = {
   cover: string;
   objectKey: string | null;
   compatibility: string[];
+  fileFormats: string[];
+  version: string | null;
+  downloadSizeLabel: string | null;
+  licenseSummary: string | null;
+  previewUrl: string | null;
   featured: boolean;
   badge: string | null;
   statusLabel: string | null;
@@ -236,6 +241,11 @@ type ProductInventoryRow = QueryResultRow & {
   cover: string;
   object_key: string | null;
   compatibility: string[] | string;
+  file_formats?: string[] | string | null;
+  version?: string | null;
+  download_size_label?: string | null;
+  license_summary?: string | null;
+  preview_url?: string | null;
   featured: boolean;
   badge: string | null;
   status_label: string | null;
@@ -620,6 +630,12 @@ const rowToProductInventory = (row: ProductInventoryRow): ProductInventoryRecord
   cover: row.cover,
   objectKey: row.object_key,
   compatibility: toStringArray(row.compatibility),
+  // Optional columns from migration 002; absent until the migration runs.
+  fileFormats: row.file_formats == null ? [] : toStringArray(row.file_formats),
+  version: row.version ?? null,
+  downloadSizeLabel: row.download_size_label ?? null,
+  licenseSummary: row.license_summary ?? null,
+  previewUrl: row.preview_url ?? null,
   featured: row.featured,
   badge: row.badge,
   statusLabel: row.status_label,
@@ -1132,6 +1148,11 @@ export const inventoryToProduct = (product: ProductInventoryRecord): Product => 
   cover: product.cover,
   downloadKey: product.objectKey ?? undefined,
   compatibility: product.compatibility,
+  fileFormats: product.fileFormats.length > 0 ? product.fileFormats : undefined,
+  version: product.version ?? undefined,
+  downloadSizeLabel: product.downloadSizeLabel ?? undefined,
+  licenseSummary: product.licenseSummary ?? undefined,
+  previewUrl: product.previewUrl ?? undefined,
   featured: product.featured,
   badge: product.badge ?? undefined,
   statusLabel: product.statusLabel ?? undefined,
@@ -1201,6 +1222,11 @@ export const updateProductInventory = async (params: {
   cover: string;
   objectKey: string | null;
   compatibility: string[];
+  fileFormats: string[];
+  version: string | null;
+  downloadSizeLabel: string | null;
+  licenseSummary: string | null;
+  previewUrl: string | null;
   featured: boolean;
   badge: string | null;
   statusLabel: string | null;
@@ -1229,6 +1255,11 @@ export const updateProductInventory = async (params: {
          stock_quantity = $18,
          low_stock_threshold = $19,
          sort_order = $20,
+         file_formats = $21,
+         version = $22,
+         download_size_label = $23,
+         license_summary = $24,
+         preview_url = $25,
          updated_at = NOW()
      WHERE product_id = $1
      RETURNING *`,
@@ -1253,6 +1284,11 @@ export const updateProductInventory = async (params: {
       params.stockQuantity,
       params.lowStockThreshold,
       params.sortOrder,
+      JSON.stringify(params.fileFormats),
+      params.version,
+      params.downloadSizeLabel,
+      params.licenseSummary,
+      params.previewUrl,
     ],
   );
 
@@ -1307,6 +1343,11 @@ export const createProductInventory = async (params: {
   cover: string;
   objectKey: string | null;
   compatibility: string[];
+  fileFormats: string[];
+  version: string | null;
+  downloadSizeLabel: string | null;
+  licenseSummary: string | null;
+  previewUrl: string | null;
   featured: boolean;
   badge: string | null;
   statusLabel: string | null;
@@ -1338,8 +1379,13 @@ export const createProductInventory = async (params: {
       stock_quantity,
       low_stock_threshold,
       sort_order,
+      file_formats,
+      version,
+      download_size_label,
+      license_summary,
+      preview_url,
       updated_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, NOW())
     RETURNING *`,
     [
       params.productId,
@@ -1364,6 +1410,11 @@ export const createProductInventory = async (params: {
       params.stockQuantity,
       params.lowStockThreshold,
       params.sortOrder,
+      JSON.stringify(params.fileFormats),
+      params.version,
+      params.downloadSizeLabel,
+      params.licenseSummary,
+      params.previewUrl,
     ],
   );
 

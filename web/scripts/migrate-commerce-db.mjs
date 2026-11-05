@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import nextEnv from "@next/env";
 
@@ -372,6 +375,46 @@ try {
     ALTER TABLE order_admin_notes ENABLE ROW LEVEL SECURITY;
     ALTER TABLE api_rate_limits ENABLE ROW LEVEL SECURITY;
   `);
+
+  // Numbered migrations. The inline DDL above is the 001 baseline; files in
+  // scripts/migrations/ apply on top of it exactly once, tracked in
+  // schema_migrations.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  const migrationsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
+  const migrationFiles = readdirSync(migrationsDir)
+    .filter((file) => file.endsWith(".sql"))
+    .sort();
+
+  for (const file of migrationFiles) {
+    const version = file.replace(/\.sql$/, "");
+    const applied = await pool.query("SELECT 1 FROM schema_migrations WHERE version = $1", [version]);
+
+    if (applied.rowCount > 0) {
+      continue;
+    }
+
+    const sql = readFileSync(path.join(migrationsDir, file), "utf8");
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(sql);
+      await client.query("INSERT INTO schema_migrations (version) VALUES ($1)", [version]);
+      await client.query("COMMIT");
+      console.log(`Applied migration ${version}.`);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
   console.log("Postgres commerce schema migrated.");
 } finally {
